@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PROXY = (import.meta.env.VITE_PROXY_BASE as string | undefined)
-  || 'https://mailflow-seu-email-inteligente-production.up.railway.app';
+const PROXY = (
+  (import.meta.env.VITE_PROXY_BASE as string | undefined)
+  || 'https://mailflow-seu-email-inteligente-production.up.railway.app'
+).trim();
 
 interface Message {
   role: 'user' | 'agent';
