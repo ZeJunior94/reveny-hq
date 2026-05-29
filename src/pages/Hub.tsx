@@ -1,4 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+
+const PROXY = (
+  (import.meta.env.VITE_PROXY_BASE as string | undefined)
+  || 'https://mailflow-seu-email-inteligente-production.up.railway.app'
+).trim();
+
+interface HubStats {
+  features: { total: number; aprovadas: number };
+  prds: { total: number; tasks: number };
+  leads: { total: number; mrr: number; clientes: number };
+  posts: { total: number; publicados: number };
+}
 
 const AGENTS = [
   {
@@ -8,8 +22,6 @@ const AGENTS = [
     color: '#7aaa4a',
     badge: 'PM',
     badgeBg: '#7aaa4a',
-    tags: ['features', 'aprovadas'],
-    tagColors: ['#7aaa4a', '#7aaa4a'],
   },
   {
     path: '/builder',
@@ -18,8 +30,6 @@ const AGENTS = [
     color: '#60a5fa',
     badge: 'B',
     badgeBg: '#60a5fa',
-    tags: ['PRDs gerados'],
-    tagColors: ['#60a5fa'],
   },
   {
     path: '/pipeline',
@@ -28,8 +38,6 @@ const AGENTS = [
     color: '#f59e0b',
     badge: 'P',
     badgeBg: '#f59e0b',
-    tags: ['leads', 'clientes', 'R$0'],
-    tagColors: ['#f59e0b', '#f59e0b', '#f59e0b'],
   },
   {
     path: '/carteira',
@@ -38,8 +46,6 @@ const AGENTS = [
     color: '#34d399',
     badge: 'C',
     badgeBg: '#34d399',
-    tags: ['clientes ativos', 'MRR real'],
-    tagColors: ['#34d399', '#34d399'],
   },
   {
     path: '/conteudo',
@@ -48,13 +54,29 @@ const AGENTS = [
     color: '#a78bfa',
     badge: 'C',
     badgeBg: '#a78bfa',
-    tags: ['posts', 'publicados'],
-    tagColors: ['#a78bfa', '#a78bfa'],
   },
 ];
 
+function fmt(n: number) {
+  if (n >= 1000) return `R$${(n / 1000).toFixed(1)}k`;
+  return `R$${n.toFixed(0)}`;
+}
+
 export default function Hub() {
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const [stats, setStats] = useState<HubStats | null>(null);
+
+  useEffect(() => {
+    fetch(`${PROXY}/api/hq/hub/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => { if (!data.error) setStats(data); })
+      .catch(() => {/* silencia — mostra 0 */});
+  }, [token]);
+
+  const s = stats;
 
   return (
     <div className="p-10 max-w-5xl">
@@ -69,19 +91,39 @@ export default function Hub() {
       {/* Stats strip */}
       <div className="grid grid-cols-4 gap-3 mb-10">
         {[
-          { label: 'FEATURES', value: '0', sub: '0 aprovadas', color: '#7aaa4a' },
-          { label: 'PRDs',     value: '0', sub: '0 tasks',     color: '#60a5fa' },
-          { label: 'LEADS',    value: '0', sub: 'R$0 MRR',     color: '#f59e0b' },
-          { label: 'POSTS',    value: '0', sub: '0 publicados', color: '#a78bfa' },
-        ].map((s) => (
+          {
+            label: 'FEATURES',
+            value: s ? String(s.features.total) : '—',
+            sub: s ? `${s.features.aprovadas} aprovadas` : '...',
+            color: '#7aaa4a',
+          },
+          {
+            label: 'PRDs',
+            value: s ? String(s.prds.total) : '—',
+            sub: s ? `${s.prds.tasks} tasks` : '...',
+            color: '#60a5fa',
+          },
+          {
+            label: 'LEADS',
+            value: s ? String(s.leads.total) : '—',
+            sub: s ? `${fmt(s.leads.mrr)} MRR est.` : '...',
+            color: '#f59e0b',
+          },
+          {
+            label: 'POSTS',
+            value: s ? String(s.posts.total) : '—',
+            sub: s ? `${s.posts.publicados} publicados` : '...',
+            color: '#a78bfa',
+          },
+        ].map((stat) => (
           <div
-            key={s.label}
+            key={stat.label}
             className="bg-[#141414] border border-white/5 rounded-xl p-5"
-            style={{ borderTop: `2px solid ${s.color}` }}
+            style={{ borderTop: `2px solid ${stat.color}` }}
           >
-            <div className="text-2xl font-bold text-white mb-1">{s.value}</div>
-            <div className="mono text-white/35">{s.label}</div>
-            <div className="text-xs text-white/25 mt-1">{s.sub}</div>
+            <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+            <div className="mono text-white/35">{stat.label}</div>
+            <div className="text-xs text-white/25 mt-1">{stat.sub}</div>
           </div>
         ))}
       </div>
@@ -101,32 +143,13 @@ export default function Hub() {
               >
                 {a.badge}
               </div>
-              <div>
-                <div className="font-semibold text-white text-sm group-hover:text-white transition-colors">
-                  {a.label}
-                </div>
+              <div className="font-semibold text-white text-sm group-hover:text-white transition-colors">
+                {a.label}
               </div>
             </div>
-            <p className="text-white/40 text-xs leading-relaxed mb-4">{a.desc}</p>
-            <div className="flex gap-2 flex-wrap">
-              {a.tags.map((tag, i) => (
-                <span
-                  key={tag}
-                  className="mono px-2 py-0.5 rounded text-[10px]"
-                  style={{ color: a.tagColors[i], background: `${a.tagColors[i]}15` }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+            <p className="text-white/40 text-xs leading-relaxed">{a.desc}</p>
           </button>
         ))}
-      </div>
-
-      {/* Activity */}
-      <div className="mt-8">
-        <div className="mono text-white/25 mb-3">atividade recente</div>
-        <div className="text-white/20 text-sm">Nenhuma atividade ainda.</div>
       </div>
     </div>
   );
