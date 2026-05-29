@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Lightbulb, Wrench, TrendingUp, Users, PenLine, ArrowRight } from 'lucide-react';
 
 const PROXY = (
   (import.meta.env.VITE_PROXY_BASE as string | undefined)
@@ -18,38 +17,38 @@ interface HubStats {
 const AGENTS = [
   {
     path: '/pm',
+    abbr: 'PM',
     label: 'PM de Features',
     desc: 'Ideias → ICE Score → backlog organizado entre sessões.',
     color: '#7aaa4a',
-    icon: Lightbulb,
   },
   {
     path: '/builder',
+    abbr: 'B',
     label: 'Builder de Features',
     desc: 'Features aprovadas → PRD completo + tasks para Claude Code.',
     color: '#60a5fa',
-    icon: Wrench,
   },
   {
     path: '/pipeline',
+    abbr: 'P',
     label: 'Pipeline Comercial',
     desc: 'CRM leve — leads, follow-ups e histórico em linguagem natural.',
     color: '#f59e0b',
-    icon: TrendingUp,
   },
   {
     path: '/carteira',
+    abbr: 'W',
     label: 'Agente de Carteira',
     desc: 'Base ativa — atividade, retenção, churn e saúde da carteira.',
     color: '#34d399',
-    icon: Users,
   },
   {
     path: '/conteudo',
+    abbr: 'C',
     label: 'Conteúdo & LinkedIn',
     desc: 'Posts alinhados ao posicionamento da Reveny, prontos pra publicar.',
     color: '#a78bfa',
-    icon: PenLine,
   },
 ];
 
@@ -61,6 +60,31 @@ function fmtMrr(n: number) {
   if (n === 0) return 'R$0';
   if (n >= 1000) return `R$${(n / 1000).toFixed(1)}k`;
   return `R$${n.toFixed(0)}`;
+}
+
+function getChips(path: string, s: HubStats) {
+  switch (path) {
+    case '/pm':       return [
+      { label: `${s.features.total} features`,       color: '#7aaa4a' },
+      { label: `${s.features.aprovadas} aprovadas`,  color: '#7aaa4a' },
+    ];
+    case '/builder':  return [
+      { label: `${s.prds.total} PRDs gerados`,       color: '#60a5fa' },
+    ];
+    case '/pipeline': return [
+      { label: `${s.leads.total} leads`,             color: '#f59e0b' },
+      { label: `${s.leads.clientes} clientes`,       color: '#f59e0b' },
+      { label: fmtMrr(s.leads.mrr),                  color: '#34d399' },
+    ];
+    case '/carteira': return [
+      { label: `${s.leads.clientes} clientes ativos`, color: '#34d399' },
+    ];
+    case '/conteudo': return [
+      { label: `${s.posts.total} posts`,             color: '#a78bfa' },
+      { label: `${s.posts.publicados} publicados`,   color: '#a78bfa' },
+    ];
+    default: return [];
+  }
 }
 
 export default function Hub() {
@@ -111,10 +135,14 @@ export default function Hub() {
   return (
     <div className="p-10 max-w-5xl">
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-3xl font-bold text-white tracking-tight mb-1">Reveny HQ</h1>
+      <div className="mb-3">
+        <h1 className="text-3xl font-black tracking-tight mb-1">
+          <span style={{ color: '#7aaa4a' }}>R</span>
+          <span className="text-white">eveny HQ</span>
+        </h1>
         <p className="mono text-white/30 text-sm">seu workspace de agentes</p>
       </div>
+      <div className="border-t border-white/5 mb-8" />
 
       {/* Stats strip */}
       <div className="grid grid-cols-4 gap-3 mb-10">
@@ -132,7 +160,7 @@ export default function Hub() {
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold text-white mb-1">{stat.value ?? '—'}</div>
+                <div className="text-2xl font-bold mb-1" style={{ color: stat.color }}>{stat.value ?? '—'}</div>
                 <div className="mono text-white/35 text-[11px] mb-0.5">{stat.label}</div>
                 <div className="text-xs text-white/25">{stat.sub ?? '—'}</div>
               </>
@@ -142,31 +170,53 @@ export default function Hub() {
       </div>
 
       {/* Agent grid */}
-      <div className="mono text-white/25 text-xs mb-3">agentes</div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="mono text-white/25 text-xs mb-3">AGENTES</div>
+      <div className="grid grid-cols-2 gap-3 mb-10">
         {AGENTS.map((a) => (
           <button
             key={a.path}
             onClick={() => navigate(a.path)}
             className="text-left bg-[#141414] border border-white/5 rounded-xl p-5 hover:border-white/12 hover:bg-[#181818] transition-all group"
           >
-            <div className="flex items-start justify-between mb-3">
+            {/* App icon */}
+            <div className="flex items-start justify-between mb-4">
               <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{ background: `${a.color}18` }}
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-sm"
+                style={{ background: a.color, color: '#000' }}
               >
-                <a.icon size={17} style={{ color: a.color }} />
+                {a.abbr}
               </div>
-              <ArrowRight
-                size={14}
-                className="opacity-0 group-hover:opacity-100 transition-opacity mt-1"
-                style={{ color: a.color }}
-              />
+              <span className="opacity-0 group-hover:opacity-60 transition-opacity text-white/60 text-sm mt-1">→</span>
             </div>
-            <div className="font-semibold text-white/85 text-sm mb-1">{a.label}</div>
-            <p className="text-white/35 text-xs leading-relaxed">{a.desc}</p>
+
+            <div className="font-semibold text-white/90 text-sm mb-1">{a.label}</div>
+            <p className="text-white/35 text-xs leading-relaxed mb-4">{a.desc}</p>
+
+            {/* Stat chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {loading ? (
+                <Skel className="h-4 w-24 rounded-full" />
+              ) : stats ? (
+                getChips(a.path, stats).map((chip, i) => (
+                  <span
+                    key={i}
+                    className="mono text-[10px] flex items-center gap-1"
+                    style={{ color: `${chip.color}90` }}
+                  >
+                    <span style={{ color: chip.color }}>●</span>
+                    {chip.label}
+                  </span>
+                ))
+              ) : null}
+            </div>
           </button>
         ))}
+      </div>
+
+      {/* Atividade recente */}
+      <div className="mono text-white/25 text-xs mb-3">ATIVIDADE RECENTE</div>
+      <div className="bg-[#141414] border border-white/5 rounded-xl p-5">
+        <p className="text-white/18 text-xs">Nenhuma atividade ainda.</p>
       </div>
     </div>
   );

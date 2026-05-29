@@ -261,10 +261,11 @@ export default function Pipeline() {
   return (
     <div className="p-10">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-3">
         <h1 className="text-2xl font-bold text-white mb-1">Pipeline Comercial</h1>
         <p className="mono text-white/30 text-sm">CRM em linguagem natural</p>
       </div>
+      <div className="border-t border-white/5 mb-8" />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-8">
@@ -289,7 +290,8 @@ export default function Pipeline() {
 
       {/* Input */}
       <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-[#f59e0b]/50 text-xs mb-3">● novo lead ou atualização</div>
+        <div className="mono text-[#f59e0b]/60 text-xs mb-3">● NOVO LEAD OU ATUALIZAÇÃO</div>
+        <div className="border-t border-white/5 mb-4" />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -316,7 +318,7 @@ export default function Pipeline() {
       </div>
 
       {/* Kanban — overflow horizontal em telas pequenas */}
-      <div className="mono text-white/25 text-xs mb-3">pipeline</div>
+      <div className="mono text-white/25 text-xs mb-3">PIPELINE</div>
       <div className="overflow-x-auto pb-2">
         <div className="grid grid-cols-5 gap-3" style={{ minWidth: 800 }}>
           {STAGES.map(col => (

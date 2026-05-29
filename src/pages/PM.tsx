@@ -96,27 +96,44 @@ export default function PM() {
     await fetch(`${PROXY}/api/hq/pm/features/${id}`, { method: 'DELETE', headers: authHeaders });
   }
 
+  async function clearAll() {
+    if (!confirm('Remover todas as features?')) return;
+    const ids = features.map(f => f.id);
+    setFeatures([]);
+    await Promise.all(ids.map(id =>
+      fetch(`${PROXY}/api/hq/pm/features/${id}`, { method: 'DELETE', headers: authHeaders })
+    ));
+  }
+
   return (
     <div className="p-10">
       {/* Header */}
-      <div className="mb-8 flex items-end justify-between">
+      <div className="mb-3 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">PM de Features</h1>
           <p className="mono text-white/30 text-sm">ideias → ICE Score → backlog</p>
         </div>
-        <div className="flex gap-4">
-          {COLS.map((c) => (
-            <span key={c.key} className="text-xs text-white/30">
-              <span className="font-bold" style={{ color: c.color }}>{byStatus(c.key).length}</span>
-              {' '}{c.key}
-            </span>
-          ))}
-        </div>
+        {!fetching && (
+          <div className="flex gap-5">
+            {[
+              { label: 'TOTAL',    value: features.length,            color: '#e5e5e5' },
+              { label: 'APROVADAS', value: byStatus('aprovada').length, color: '#7aaa4a' },
+              { label: 'BUILDING', value: byStatus('building').length, color: '#60a5fa' },
+            ].map(s => (
+              <div key={s.label} className="text-right">
+                <div className="text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
+                <div className="mono text-white/25 text-[9px]">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+      <div className="border-t border-white/5 mb-8" />
 
       {/* Input */}
       <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-white/35 text-xs mb-3">● nova ideia de feature</div>
+        <div className="mono text-[#7aaa4a]/60 text-xs mb-3">● NOVA IDEIA DE FEATURE</div>
+        <div className="border-t border-white/5 mb-4" />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -126,11 +143,12 @@ export default function PM() {
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-          <span className="text-white/20 text-xs">⌘+Enter para analisar</span>
+          <span className="mono text-white/20 text-xs">⌘+Enter para analisar</span>
           <button
             onClick={handleAnalyze}
             disabled={loading || !input.trim()}
-            className="bg-[#7aaa4a] hover:bg-[#8dc055] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            style={{ background: '#7aaa4a' }}
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -148,8 +166,19 @@ export default function PM() {
         </div>
       )}
 
-      {/* Kanban — overflow horizontal em telas pequenas */}
-      <div className="mono text-white/25 text-xs mb-3">backlog</div>
+      {/* Kanban */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="mono text-white/25 text-xs">BACKLOG</div>
+        {!fetching && features.length > 0 && (
+          <button
+            onClick={clearAll}
+            className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
+          >
+            limpar tudo
+          </button>
+        )}
+      </div>
+
       <div className="overflow-x-auto pb-2">
         <div className="grid grid-cols-4 gap-3" style={{ minWidth: 720 }}>
           {COLS.map((col) => (

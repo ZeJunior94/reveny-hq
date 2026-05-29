@@ -14,38 +14,51 @@ interface PRD {
   created_at: string;
 }
 
+interface Feature {
+  id: string;
+  title: string;
+  status: string;
+}
+
 function Skel({ className }: { className?: string }) {
   return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
 }
 
 export default function Builder() {
   const { token } = useAuth();
-  const [input, setInput]     = useState('');
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [prds, setPrds]       = useState<PRD[]>([]);
-  const [selected, setSelected] = useState<PRD | null>(null);
-  const [error, setError]     = useState<string | null>(null);
-  const [copied, setCopied]   = useState(false);
+  const [input, setInput]         = useState('');
+  const [loading, setLoading]     = useState(false);
+  const [fetching, setFetching]   = useState(true);
+  const [prds, setPrds]           = useState<PRD[]>([]);
+  const [approved, setApproved]   = useState<Feature[]>([]);
+  const [selected, setSelected]   = useState<PRD | null>(null);
+  const [error, setError]         = useState<string | null>(null);
+  const [copied, setCopied]       = useState(false);
 
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    fetch(`${PROXY}/api/hq/builder/prds`, { headers: authHeaders })
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) { setPrds(data); if (data.length > 0) setSelected(data[0]); } })
+    Promise.all([
+      fetch(`${PROXY}/api/hq/builder/prds`, { headers: authHeaders }).then(r => r.json()),
+      fetch(`${PROXY}/api/hq/pm/features`, { headers: authHeaders }).then(r => r.json()),
+    ])
+      .then(([prdsData, featData]) => {
+        if (Array.isArray(prdsData)) { setPrds(prdsData); if (prdsData.length > 0) setSelected(prdsData[0]); }
+        if (Array.isArray(featData)) setApproved(featData.filter((f: Feature) => f.status === 'aprovada'));
+      })
       .catch(e => setError(e.message))
       .finally(() => setFetching(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleGenerate() {
-    if (!input.trim() || loading) return;
+  async function handleGenerate(featureText?: string) {
+    const text = featureText ?? input.trim();
+    if (!text || loading) return;
     setLoading(true);
     setError(null);
     try {
       const r = await fetch(`${PROXY}/api/hq/builder/prd`, {
-        method: 'POST', headers: authHeaders, body: JSON.stringify({ feature: input.trim() }),
+        method: 'POST', headers: authHeaders, body: JSON.stringify({ feature: text }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro');
@@ -66,6 +79,16 @@ export default function Builder() {
     await fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authHeaders });
   }
 
+  async function clearAll() {
+    if (!confirm('Remover todos os PRDs?')) return;
+    const ids = prds.map(p => p.id);
+    setPrds([]);
+    setSelected(null);
+    await Promise.all(ids.map(id =>
+      fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authHeaders })
+    ));
+  }
+
   function handleCopy(text: string) {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -74,14 +97,40 @@ export default function Builder() {
 
   return (
     <div className="p-10 max-w-5xl">
-      <div className="mb-8">
+      {/* Header */}
+      <div className="mb-3">
         <h1 className="text-2xl font-bold text-white mb-1">Builder de Features</h1>
         <p className="mono text-white/30 text-sm">PRD completo + tasks para Claude Code</p>
       </div>
+      <div className="border-t border-white/5 mb-8" />
+
+      {/* Features aprovadas no PM */}
+      <div className="mono text-white/25 text-xs mb-3">FEATURES APROVADAS NO PM</div>
+      {fetching ? (
+        <div className="flex gap-2 mb-6">
+          {[1, 2].map(i => <Skel key={i} className="h-8 w-40 rounded-lg" />)}
+        </div>
+      ) : approved.length === 0 ? (
+        <p className="text-white/25 text-sm mb-6">Nenhuma feature aprovada no PM ainda.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {approved.map(f => (
+            <button
+              key={f.id}
+              onClick={() => handleGenerate(f.title)}
+              disabled={loading}
+              className="text-xs px-3 py-1.5 rounded-lg border border-[#7aaa4a]/25 text-[#7aaa4a]/70 hover:border-[#7aaa4a]/50 hover:text-[#7aaa4a] hover:bg-[#7aaa4a]/8 transition-all disabled:opacity-40"
+            >
+              {f.title}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Input */}
       <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-6">
-        <div className="mono text-white/35 text-xs mb-3">● descreva a feature</div>
+        <div className="mono text-[#60a5fa]/60 text-xs mb-3">● OU DESCREVA DIRETAMENTE</div>
+        <div className="border-t border-white/5 mb-4" />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -91,9 +140,9 @@ export default function Builder() {
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-          <span className="text-white/20 text-xs">⌘+Enter para gerar PRD</span>
+          <span className="mono text-white/20 text-xs">⌘+Enter para gerar PRD</span>
           <button
-            onClick={handleGenerate}
+            onClick={() => handleGenerate()}
             disabled={loading || !input.trim()}
             className="bg-[#60a5fa] hover:bg-[#7db8fb] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
           >
@@ -113,8 +162,18 @@ export default function Builder() {
 
       {/* PRDs list */}
       <div className="flex items-center justify-between mb-3">
-        <div className="mono text-white/25 text-xs">prds gerados</div>
-        {!fetching && <span className="mono text-white/18 text-xs">{prds.length} total</span>}
+        <div className="mono text-white/25 text-xs">PRDS GERADOS</div>
+        <div className="flex items-center gap-3">
+          {!fetching && <span className="mono text-white/18 text-xs">{prds.length} total</span>}
+          {!fetching && prds.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
+            >
+              limpar tudo
+            </button>
+          )}
+        </div>
       </div>
 
       {fetching ? (

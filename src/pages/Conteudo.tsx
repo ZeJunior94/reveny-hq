@@ -42,6 +42,13 @@ const PLACEHOLDERS: Record<Platform, string> = {
   story: 'Ex: bastidores do desenvolvimento do novo template wellness...',
 };
 
+const FILTER_LABELS: Record<PostStatus | 'todos', string> = {
+  todos: 'Todos',
+  rascunho: 'Rascunho',
+  pronto: 'Pronto',
+  publicado: 'Publicado',
+};
+
 const INPUT_CLS =
   'w-full bg-[#1a1a1a] border border-white/6 rounded-lg px-3 py-2.5 text-white/80 text-sm leading-relaxed resize-none focus:outline-none focus:border-white/20 focus:bg-[#1e1e1e] transition-all placeholder-white/20';
 
@@ -112,9 +119,7 @@ export default function Conteudo() {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
     if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status } : prev);
     await fetch(`${PROXY}/api/hq/content/posts/${id}`, {
-      method: 'PATCH',
-      headers: authHeaders,
-      body: JSON.stringify({ status }),
+      method: 'PATCH', headers: authHeaders, body: JSON.stringify({ status }),
     });
   }
 
@@ -123,9 +128,18 @@ export default function Conteudo() {
     setPosts((prev) => prev.filter((p) => p.id !== id));
     if (selected?.id === id) setSelected(null);
     await fetch(`${PROXY}/api/hq/content/posts/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders,
+      method: 'DELETE', headers: authHeaders,
     });
+  }
+
+  async function clearAll() {
+    if (!confirm('Remover todos os posts?')) return;
+    const ids = posts.map(p => p.id);
+    setPosts([]);
+    setSelected(null);
+    await Promise.all(ids.map(id =>
+      fetch(`${PROXY}/api/hq/content/posts/${id}`, { method: 'DELETE', headers: authHeaders })
+    ));
   }
 
   function handleCopy(id: string, text: string) {
@@ -139,7 +153,7 @@ export default function Conteudo() {
   return (
     <div className="p-10 max-w-5xl">
       {/* Header */}
-      <div className="mb-8 flex items-end justify-between">
+      <div className="mb-3 flex items-end justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Conteúdo & LinkedIn</h1>
           <p className="mono text-white/30 text-sm">calendário editorial</p>
@@ -155,24 +169,26 @@ export default function Conteudo() {
           ))}
         </div>
       </div>
+      <div className="border-t border-white/5 mb-8" />
 
       <div className="grid grid-cols-[1fr_1.2fr] gap-6">
         {/* Left: Input + List */}
         <div className="min-w-0">
           {/* Input */}
-          <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-4">
-            <div className="mono text-xs mb-4" style={{ color: `${PLATFORM_COLORS[platform]}70` }}>● gerar post</div>
+          <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-5">
+            <div className="mono text-xs mb-4" style={{ color: `${PLATFORM_COLORS[platform]}70` }}>● GERAR POST</div>
+            <div className="border-t border-white/5 mb-4" />
 
-            {/* Platform tabs */}
+            {/* Platform tabs — bordered pill style */}
             <div className="flex gap-2 mb-4">
               {(['linkedin', 'tweet', 'story'] as Platform[]).map((p) => (
                 <button
                   key={p}
                   onClick={() => setPlatform(p)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                   style={platform === p
                     ? { background: PLATFORM_COLORS[p], color: '#000' }
-                    : { border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
+                    : { border: `1px solid ${PLATFORM_COLORS[p]}30`, color: `${PLATFORM_COLORS[p]}60` }
                   }
                 >
                   {PLATFORM_LABELS[p]}
@@ -189,7 +205,7 @@ export default function Conteudo() {
               className={INPUT_CLS}
             />
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-              <span className="text-white/20 text-xs">⌘+Enter para gerar</span>
+              <span className="mono text-white/20 text-xs">voz: direto, sem hype, founder real</span>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
@@ -212,21 +228,33 @@ export default function Conteudo() {
             </div>
           )}
 
-          {/* Filter */}
-          <div className="flex items-center gap-1.5 mb-3">
+          {/* Filter tabs — bordered pill style */}
+          <div className="flex items-center gap-2 mb-4">
             {(['todos', 'rascunho', 'pronto', 'publicado'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-2.5 py-1 rounded-lg text-xs transition-colors mono ${
-                  filter === f ? 'bg-white/8 text-white/70' : 'text-white/25 hover:text-white/45'
-                }`}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={filter === f
+                  ? { background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.15)' }
+                  : { border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)' }
+                }
               >
-                {f}
+                {FILTER_LABELS[f]}
               </button>
             ))}
-            {!fetching && (
-              <span className="ml-auto mono text-white/18 text-xs">{filtered.length}</span>
+          </div>
+
+          {/* Posts section header */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="mono text-white/25 text-xs">POSTS</div>
+            {!fetching && posts.length > 0 && (
+              <button
+                onClick={clearAll}
+                className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
+              >
+                limpar tudo
+              </button>
             )}
           </div>
 
