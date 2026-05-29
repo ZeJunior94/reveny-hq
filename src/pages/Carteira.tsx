@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
-const PROXY = import.meta.env.VITE_PROXY_BASE as string;
+const PROXY = (import.meta.env.VITE_PROXY_BASE as string | undefined)
+  || 'https://mailflow-seu-email-inteligente-production.up.railway.app';
 
 interface Message {
   role: 'user' | 'agent';
@@ -45,7 +46,9 @@ export default function Carteira() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${PROXY}/api/hq/carteira/query`, {
+      const url = `${PROXY}/api/hq/carteira/query`;
+      console.log('[carteira] chamando:', url);
+      const res = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,11 +63,13 @@ export default function Carteira() {
       if (data.resumo) setResumo(data.resumo);
       setMessages((prev) => [...prev, { role: 'agent', text: data.answer }]);
     } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Falha na consulta';
+      console.error('[carteira] erro:', msg, '| proxy:', PROXY);
       setMessages((prev) => [
         ...prev,
         {
           role: 'agent',
-          text: `Erro: ${err instanceof Error ? err.message : 'Falha na consulta'}`,
+          text: `Erro: ${msg}\n\n(URL: ${PROXY}/api/hq/carteira/query)`,
         },
       ]);
     } finally {
