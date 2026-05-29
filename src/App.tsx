@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import Login from '@/pages/Login';
+import AuthCallback from '@/pages/AuthCallback';
 import Hub from '@/pages/Hub';
 import PM from '@/pages/PM';
 import Builder from '@/pages/Builder';
@@ -39,6 +40,7 @@ function AppRoutes() {
         path="/login"
         element={user ? <Navigate to="/" replace /> : <Login />}
       />
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route
         path="/"
         element={

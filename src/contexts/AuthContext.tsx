@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { signIn, signOut, getUser } from '@/lib/supabase';
+import { signOut, getUser } from '@/lib/supabase';
 
-const ADMINS = ['juniormarquess1994@gmail.com'];
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+export const ADMINS = ['juniormarquess1994@gmail.com'];
 
 interface AuthUser {
   id: string;
@@ -13,7 +14,8 @@ interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => void;
+  setSession: (token: string, user: AuthUser) => void;
   logout: () => Promise<void>;
 }
 
@@ -40,16 +42,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
-    const data = await signIn(email, password);
-    const accessToken: string = data.access_token;
-    const userEmail: string = data.user?.email ?? '';
-    if (!ADMINS.includes(userEmail)) {
-      throw new Error('Acesso restrito à equipe Reveny.');
-    }
+  function loginWithGoogle() {
+    const callbackUrl = `${window.location.origin}/auth/callback`;
+    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callbackUrl)}`;
+  }
+
+  function setSession(accessToken: string, authUser: AuthUser) {
     localStorage.setItem('hq_token', accessToken);
     setToken(accessToken);
-    setUser({ id: data.user.id, email: userEmail, isAdmin: true });
+    setUser(authUser);
   }
 
   async function logout() {
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, loginWithGoogle, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   );
