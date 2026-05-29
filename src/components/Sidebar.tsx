@@ -17,6 +17,10 @@ const NAV: NavItem[] = [
   { path: '/conteudo',  label: 'Conteúdo',       color: '#a78bfa' },
 ];
 
+const NAV_CONFIG: NavItem[] = [
+  { path: '/contexto',  label: 'Contexto',       color: '#ffffff' },
+];
+
 export default function Sidebar() {
   const { logout } = useAuth();
 
@@ -55,6 +59,33 @@ export default function Sidebar() {
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: isActive ? item.color : '#ffffff30' }}
+                />
+                <span>{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+
+        {/* Separador */}
+        <div className="my-2 border-t border-white/5 mx-1" />
+
+        {NAV_CONFIG.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs transition-colors ${
+                isActive
+                  ? 'bg-white/8 text-white'
+                  : 'text-white/30 hover:text-white/60 hover:bg-white/4'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: isActive ? '#ffffff' : '#ffffff25' }}
                 />
                 <span>{item.label}</span>
               </>
