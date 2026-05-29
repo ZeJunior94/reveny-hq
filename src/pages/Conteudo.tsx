@@ -42,6 +42,13 @@ const PLACEHOLDERS: Record<Platform, string> = {
   story: 'Ex: bastidores do desenvolvimento do novo template wellness...',
 };
 
+const INPUT_CLS =
+  'w-full bg-[#1a1a1a] border border-white/6 rounded-lg px-3 py-2.5 text-white/80 text-sm leading-relaxed resize-none focus:outline-none focus:border-white/20 focus:bg-[#1e1e1e] transition-all placeholder-white/20';
+
+function Skel({ className }: { className?: string }) {
+  return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
+}
+
 export default function Conteudo() {
   const { token } = useAuth();
   const [platform, setPlatform] = useState<Platform>('linkedin');
@@ -131,13 +138,16 @@ export default function Conteudo() {
 
   return (
     <div className="p-10 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Conteúdo & LinkedIn</h1>
-        <p className="mono text-white/30">calendário editorial</p>
-        <div className="flex gap-4 mt-3">
+      {/* Header */}
+      <div className="mb-8 flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">Conteúdo & LinkedIn</h1>
+          <p className="mono text-white/30 text-sm">calendário editorial</p>
+        </div>
+        <div className="flex gap-4">
           {(['linkedin', 'tweet', 'story'] as Platform[]).map((p) => (
             <span key={p} className="text-xs text-white/30">
-              <span className="font-semibold" style={{ color: PLATFORM_COLORS[p] }}>
+              <span className="font-bold" style={{ color: PLATFORM_COLORS[p] }}>
                 {postsByPlatform(p)}
               </span>{' '}
               {PLATFORM_LABELS[p]}
@@ -146,12 +156,12 @@ export default function Conteudo() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-[1fr_1.2fr] gap-6">
         {/* Left: Input + List */}
-        <div>
+        <div className="min-w-0">
           {/* Input */}
           <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-4">
-            <div className="mono mb-4" style={{ color: `${PLATFORM_COLORS[platform]}60` }}>● gerar post</div>
+            <div className="mono text-xs mb-4" style={{ color: `${PLATFORM_COLORS[platform]}70` }}>● gerar post</div>
 
             {/* Platform tabs */}
             <div className="flex gap-2 mb-4">
@@ -162,7 +172,7 @@ export default function Conteudo() {
                   className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                   style={platform === p
                     ? { background: PLATFORM_COLORS[p], color: '#000' }
-                    : { border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }
+                    : { border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }
                   }
                 >
                   {PLATFORM_LABELS[p]}
@@ -176,17 +186,22 @@ export default function Conteudo() {
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
               placeholder={PLACEHOLDERS[platform]}
               rows={3}
-              className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none"
+              className={INPUT_CLS}
             />
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-              <span className="text-white/20 text-xs">voz: direto, sem hype, founder real</span>
+              <span className="text-white/20 text-xs">⌘+Enter para gerar</span>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
                 className="disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-                style={{ background: loading || !input.trim() ? PLATFORM_COLORS[platform] : PLATFORM_COLORS[platform] }}
+                style={{ background: PLATFORM_COLORS[platform] }}
               >
-                {loading ? 'Gerando...' : 'Gerar →'}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
+                    Gerando...
+                  </span>
+                ) : 'Gerar →'}
               </button>
             </div>
           </div>
@@ -197,25 +212,40 @@ export default function Conteudo() {
             </div>
           )}
 
-          {/* Filter + List */}
-          <div className="flex items-center gap-2 mb-3">
+          {/* Filter */}
+          <div className="flex items-center gap-1.5 mb-3">
             {(['todos', 'rascunho', 'pronto', 'publicado'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 rounded-lg text-xs transition-colors ${
-                  filter === f ? 'bg-white/10 text-white' : 'text-white/30 hover:text-white/50'
+                className={`px-2.5 py-1 rounded-lg text-xs transition-colors mono ${
+                  filter === f ? 'bg-white/8 text-white/70' : 'text-white/25 hover:text-white/45'
                 }`}
               >
                 {f}
               </button>
             ))}
+            {!fetching && (
+              <span className="ml-auto mono text-white/18 text-xs">{filtered.length}</span>
+            )}
           </div>
 
+          {/* List */}
           {fetching ? (
-            <div className="text-white/20 text-sm">Carregando...</div>
+            <div className="flex flex-col gap-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-[#141414] border border-white/5 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Skel className="h-3 w-14" />
+                    <Skel className="h-3 w-12" />
+                  </div>
+                  <Skel className="h-3 w-full mb-1.5" />
+                  <Skel className="h-3 w-3/4" />
+                </div>
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="text-white/20 text-sm py-4">
+            <div className="text-white/18 text-sm py-4">
               {posts.length === 0 ? 'Nenhum post ainda.' : 'Nenhum post nessa categoria.'}
             </div>
           ) : (
@@ -226,7 +256,7 @@ export default function Conteudo() {
                   onClick={() => setSelected(p)}
                   className={`text-left rounded-xl p-4 transition-all border group ${
                     selected?.id === p.id
-                      ? 'bg-[#1a1a1a] border-white/10'
+                      ? 'bg-[#1a1a1a] border-white/12'
                       : 'bg-[#141414] border-white/5 hover:border-white/10'
                   }`}
                 >
@@ -244,7 +274,7 @@ export default function Conteudo() {
                       {p.status}
                     </span>
                   </div>
-                  <div className="text-white/50 text-xs leading-snug line-clamp-2">
+                  <div className="text-white/45 text-xs leading-snug line-clamp-2">
                     {p.content}
                   </div>
                 </button>
@@ -254,23 +284,21 @@ export default function Conteudo() {
         </div>
 
         {/* Right: Selected post detail */}
-        <div>
+        <div className="min-w-0">
           {selected ? (
             <div className="bg-[#141414] border border-white/5 rounded-xl p-5 sticky top-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="mono text-xs font-semibold"
-                    style={{ color: PLATFORM_COLORS[selected.platform] }}
-                  >
-                    {PLATFORM_LABELS[selected.platform]}
-                  </span>
-                </div>
+                <span
+                  className="mono text-xs font-semibold"
+                  style={{ color: PLATFORM_COLORS[selected.platform] }}
+                >
+                  {PLATFORM_LABELS[selected.platform]}
+                </span>
                 <div className="flex items-center gap-3">
                   <select
                     value={selected.status}
                     onChange={(e) => updateStatus(selected.id, e.target.value as PostStatus)}
-                    className="bg-transparent text-white/30 text-xs focus:outline-none cursor-pointer"
+                    className="bg-[#111] text-white/30 text-[10px] focus:outline-none cursor-pointer rounded px-1 py-0.5"
                   >
                     <option value="rascunho">rascunho</option>
                     <option value="pronto">pronto</option>
@@ -278,7 +306,7 @@ export default function Conteudo() {
                   </select>
                   <button
                     onClick={() => handleCopy(selected.id, selected.content)}
-                    className="text-white/25 text-xs hover:text-white/50 transition-colors"
+                    className="text-white/25 text-xs hover:text-white/55 transition-colors"
                   >
                     {copied === selected.id ? '✓ copiado' : 'copiar'}
                   </button>
@@ -286,20 +314,23 @@ export default function Conteudo() {
                     onClick={() => deletePost(selected.id)}
                     className="text-white/15 hover:text-red-400 text-xs transition-colors"
                   >
-                    remover
+                    ×
                   </button>
                 </div>
               </div>
+
               {selected.topic && (
                 <div className="mono text-white/20 text-[10px] mb-3">
                   tema: {selected.topic}
                 </div>
               )}
-              <p className="text-white/70 text-sm leading-relaxed whitespace-pre-wrap">
+
+              <p className="text-white/65 text-sm leading-relaxed whitespace-pre-wrap">
                 {selected.content}
               </p>
+
               {selected.platform === 'tweet' && (
-                <div className="mt-3 pt-3 border-t border-white/5">
+                <div className="mt-4 pt-3 border-t border-white/5">
                   <span className={`mono text-[10px] ${selected.content.length > 280 ? 'text-red-400' : 'text-white/20'}`}>
                     {selected.content.length}/280 chars
                   </span>
@@ -307,7 +338,7 @@ export default function Conteudo() {
               )}
             </div>
           ) : (
-            <div className="bg-[#141414] border border-white/5 rounded-xl p-5 flex items-center justify-center min-h-[200px]">
+            <div className="bg-[#141414] border border-white/5 rounded-xl p-5 flex items-center justify-center min-h-[220px]">
               <span className="text-white/15 text-sm">Selecione um post</span>
             </div>
           )}

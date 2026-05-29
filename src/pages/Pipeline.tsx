@@ -30,12 +30,16 @@ const STAGES: { key: Stage; label: string; color: string }[] = [
   { key: 'cliente',  label: 'CLIENTE',  color: '#7aaa4a' },
 ];
 
+function Skel({ className }: { className?: string }) {
+  return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
+}
+
+const INPUT_CLS =
+  'w-full bg-[#1e1e1e] border border-white/8 rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none focus:border-white/25 focus:bg-[#232323] transition-all placeholder-white/20';
+
 // ── Painel de detalhes ────────────────────────────────────────────────────────
 function LeadPanel({
-  lead,
-  onClose,
-  onSave,
-  onDelete,
+  lead, onClose, onSave, onDelete,
 }: {
   lead: Lead;
   onClose: () => void;
@@ -48,11 +52,8 @@ function LeadPanel({
   const [dirty, setDirty] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Fechar com ESC
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
-    }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -64,12 +65,8 @@ function LeadPanel({
 
   async function handleSave() {
     setSaving(true);
-    try {
-      await onSave(lead.id, form);
-      setDirty(false);
-    } finally {
-      setSaving(false);
-    }
+    try { await onSave(lead.id, form); setDirty(false); }
+    finally { setSaving(false); }
   }
 
   async function handleDelete() {
@@ -82,100 +79,64 @@ function LeadPanel({
 
   return (
     <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
-
-      {/* Painel */}
+      <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-[1px]" onClick={onClose} />
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-[420px] bg-[#141414] border-l border-white/8 z-50 flex flex-col overflow-hidden"
+        className="fixed top-0 right-0 h-full w-[420px] bg-[#131313] border-l border-white/8 z-50 flex flex-col"
         style={{ animation: 'slideIn 0.2s ease-out' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <span
-              className="mono text-[10px] px-2 py-1 rounded"
+              className="mono text-[10px] font-semibold px-2 py-1 rounded-md"
               style={{ color: stageColor, background: `${stageColor}18` }}
             >
               {form.stage?.toUpperCase()}
             </span>
-            <span className="text-white/40 text-xs">
+            <span className="text-white/30 text-xs">
               {new Date(lead.created_at).toLocaleDateString('pt-BR')}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/30 hover:text-white/70 transition-colors text-lg leading-none"
-          >
+          <button onClick={onClose} className="text-white/25 hover:text-white/70 transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5">
             ✕
           </button>
         </div>
 
         {/* Form */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-5">
-
-          {/* Empresa */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
           <div>
-            <label className="mono text-white/30 text-[10px] block mb-1.5">EMPRESA</label>
-            <input
-              value={form.company ?? ''}
-              onChange={e => set('company', e.target.value)}
-              className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-              placeholder="Nome da empresa"
-            />
+            <label className="mono text-white/25 text-[10px] block mb-1.5">EMPRESA</label>
+            <input value={form.company ?? ''} onChange={e => set('company', e.target.value)} className={INPUT_CLS} placeholder="Nome da empresa" />
           </div>
-
-          {/* Nome do contato */}
           <div>
-            <label className="mono text-white/30 text-[10px] block mb-1.5">CONTATO</label>
-            <input
-              value={form.name ?? ''}
-              onChange={e => set('name', e.target.value || null)}
-              className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-              placeholder="Nome da pessoa"
-            />
+            <label className="mono text-white/25 text-[10px] block mb-1.5">CONTATO</label>
+            <input value={form.name ?? ''} onChange={e => set('name', e.target.value || null)} className={INPUT_CLS} placeholder="Nome da pessoa" />
           </div>
-
-          {/* Telefone + Email lado a lado */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mono text-white/30 text-[10px] block mb-1.5">TELEFONE</label>
-              <input
-                value={form.phone ?? ''}
-                onChange={e => set('phone', e.target.value || null)}
-                className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                placeholder="(11) 99999-9999"
-              />
+              <label className="mono text-white/25 text-[10px] block mb-1.5">TELEFONE</label>
+              <input value={form.phone ?? ''} onChange={e => set('phone', e.target.value || null)} className={INPUT_CLS} placeholder="(11) 99999-9999" />
             </div>
             <div>
-              <label className="mono text-white/30 text-[10px] block mb-1.5">EMAIL</label>
-              <input
-                type="email"
-                value={form.contact_email ?? ''}
-                onChange={e => set('contact_email', e.target.value || null)}
-                className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                placeholder="contato@loja.com"
-              />
+              <label className="mono text-white/25 text-[10px] block mb-1.5">EMAIL</label>
+              <input type="email" value={form.contact_email ?? ''} onChange={e => set('contact_email', e.target.value || null)} className={INPUT_CLS} placeholder="contato@loja.com" />
             </div>
           </div>
 
-          {/* Stage */}
+          {/* Stage pills */}
           <div>
-            <label className="mono text-white/30 text-[10px] block mb-2">ESTÁGIO</label>
-            <div className="flex gap-2 flex-wrap">
+            <label className="mono text-white/25 text-[10px] block mb-2">ESTÁGIO</label>
+            <div className="flex gap-1.5 flex-wrap">
               {STAGES.map(s => (
                 <button
                   key={s.key}
                   onClick={() => set('stage', s.key)}
-                  className="mono text-[10px] px-3 py-1.5 rounded-lg transition-all"
+                  className="mono text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
                   style={
                     form.stage === s.key
                       ? { color: s.color, background: `${s.color}22`, border: `1px solid ${s.color}50` }
-                      : { color: '#ffffff40', background: 'transparent', border: '1px solid #ffffff10' }
+                      : { color: '#ffffff35', background: 'transparent', border: '1px solid #ffffff0e' }
                   }
                 >
                   {s.label}
@@ -184,47 +145,32 @@ function LeadPanel({
             </div>
           </div>
 
-          {/* Follow-up + MRR lado a lado */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mono text-white/30 text-[10px] block mb-1.5">FOLLOW-UP</label>
-              <input
-                type="date"
-                value={form.follow_up_at ?? ''}
-                onChange={e => set('follow_up_at', e.target.value || null)}
-                className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-              />
+              <label className="mono text-white/25 text-[10px] block mb-1.5">FOLLOW-UP</label>
+              <input type="date" value={form.follow_up_at ?? ''} onChange={e => set('follow_up_at', e.target.value || null)} className={INPUT_CLS} />
             </div>
             <div>
-              <label className="mono text-white/30 text-[10px] block mb-1.5">MRR EST. (R$)</label>
-              <input
-                type="number"
-                value={form.mrr_est ?? 0}
-                onChange={e => set('mrr_est', Number(e.target.value))}
-                className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors"
-                placeholder="0"
-                min={0}
-              />
+              <label className="mono text-white/25 text-[10px] block mb-1.5">MRR EST. (R$)</label>
+              <input type="number" value={form.mrr_est ?? 0} onChange={e => set('mrr_est', Number(e.target.value))} className={INPUT_CLS} placeholder="0" min={0} />
             </div>
           </div>
 
-          {/* Observações */}
           <div>
-            <label className="mono text-white/30 text-[10px] block mb-1.5">OBSERVAÇÕES</label>
+            <label className="mono text-white/25 text-[10px] block mb-1.5">OBSERVAÇÕES</label>
             <textarea
               value={form.notes ?? ''}
               onChange={e => set('notes', e.target.value || null)}
               rows={4}
-              className="w-full bg-[#1a1a1a] border border-white/8 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-white/20 transition-colors resize-none"
+              className={`${INPUT_CLS} resize-none`}
               placeholder="Contexto, histórico, próximos passos..."
             />
           </div>
 
-          {/* Input original */}
           {lead.raw_input && (
             <div>
-              <label className="mono text-white/30 text-[10px] block mb-1.5">ENTRADA ORIGINAL</label>
-              <p className="text-white/25 text-xs leading-relaxed bg-[#1a1a1a] rounded-lg px-3 py-2.5">
+              <label className="mono text-white/25 text-[10px] block mb-1.5">ENTRADA ORIGINAL</label>
+              <p className="text-white/20 text-xs leading-relaxed bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2.5">
                 {lead.raw_input}
               </p>
             </div>
@@ -233,14 +179,9 @@ function LeadPanel({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between">
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="text-red-400/60 hover:text-red-400 text-xs transition-colors disabled:opacity-40"
-          >
+          <button onClick={handleDelete} disabled={deleting} className="text-red-400/50 hover:text-red-400 text-xs transition-colors disabled:opacity-40">
             {deleting ? 'Removendo...' : 'Remover lead'}
           </button>
-
           <button
             onClick={handleSave}
             disabled={saving || !dirty}
@@ -250,12 +191,8 @@ function LeadPanel({
           </button>
         </div>
       </div>
-
       <style>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); opacity: 0; }
-          to   { transform: translateX(0);    opacity: 1; }
-        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
       `}</style>
     </>
   );
@@ -264,19 +201,16 @@ function LeadPanel({
 // ── Pipeline principal ────────────────────────────────────────────────────────
 export default function Pipeline() {
   const { token } = useAuth();
-  const [input, setInput]         = useState('');
-  const [leads, setLeads]         = useState<Lead[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [loadingPage, setLoadingPage] = useState(true);
+  const [input, setInput]     = useState('');
+  const [leads, setLeads]     = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
-  const authHeaders = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
+  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
 
-  const byStage   = (s: Stage) => leads.filter(l => l.stage === s);
-  const totalMrr  = leads.filter(l => l.stage === 'cliente').reduce((a, l) => a + (l.mrr_est ?? 0), 0);
+  const byStage  = (s: Stage) => leads.filter(l => l.stage === s);
+  const totalMrr = leads.filter(l => l.stage === 'cliente').reduce((a, l) => a + (l.mrr_est ?? 0), 0);
   const followUps = leads.filter(l => l.follow_up_at).length;
 
   const fetchLeads = useCallback(async () => {
@@ -286,12 +220,9 @@ export default function Pipeline() {
       if (!r.ok) throw new Error(await r.text());
       const { leads: data } = await r.json();
       setLeads(data ?? []);
-    } catch (err) {
-      console.error('[pipeline]', err);
-    } finally {
-      setLoadingPage(false);
-    }
-  }, [token]);
+    } catch (err) { console.error('[pipeline]', err); }
+    finally { setFetching(false); }
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
@@ -300,26 +231,19 @@ export default function Pipeline() {
     setLoading(true);
     try {
       const r = await fetch(`${PROXY}/api/hq/pipeline/parse`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ text: input }),
+        method: 'POST', headers: authHeaders, body: JSON.stringify({ text: input }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error);
       setLeads(prev => [data.lead, ...prev]);
       setInput('');
-    } catch (err) {
-      console.error('[pipeline/add]', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error('[pipeline/add]', err); }
+    finally { setLoading(false); }
   }
 
   async function handleSave(id: string, updates: Partial<Lead>) {
     const r = await fetch(`${PROXY}/api/hq/pipeline/leads/${id}`, {
-      method: 'PATCH',
-      headers: authHeaders,
-      body: JSON.stringify(updates),
+      method: 'PATCH', headers: authHeaders, body: JSON.stringify(updates),
     });
     const data = await r.json();
     if (data.lead) {
@@ -329,48 +253,50 @@ export default function Pipeline() {
   }
 
   async function handleDelete(id: string) {
-    await fetch(`${PROXY}/api/hq/pipeline/leads/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders,
-    });
+    await fetch(`${PROXY}/api/hq/pipeline/leads/${id}`, { method: 'DELETE', headers: authHeaders });
     setLeads(prev => prev.filter(l => l.id !== id));
     setSelectedLead(null);
   }
 
   return (
-    <div className="p-10 max-w-6xl">
+    <div className="p-10">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white mb-1">Pipeline Comercial</h1>
-        <p className="mono text-white/30">CRM em linguagem natural</p>
+        <p className="mono text-white/30 text-sm">CRM em linguagem natural</p>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-8">
         {[
-          { label: 'LEADS',      value: leads.length },
-          { label: 'CLIENTES',   value: byStage('cliente').length },
-          { label: 'FOLLOW-UPS', value: followUps },
-          { label: 'MRR EST.',   value: `R$${totalMrr.toLocaleString('pt-BR')}`, color: '#7aaa4a' },
+          { label: 'LEADS',      value: leads.length,                                    color: '#e5e5e5' },
+          { label: 'CLIENTES',   value: byStage('cliente').length,                       color: '#7aaa4a' },
+          { label: 'FOLLOW-UPS', value: followUps,                                       color: '#f59e0b' },
+          { label: 'MRR EST.',   value: `R$${totalMrr.toLocaleString('pt-BR')}`,        color: '#34d399' },
         ].map(s => (
           <div key={s.label} className="bg-[#141414] border border-white/5 rounded-xl p-4">
-            <div className="text-xl font-bold mb-1" style={{ color: (s as { color?: string }).color ?? 'white' }}>
-              {s.value}
-            </div>
-            <div className="mono text-white/30">{s.label}</div>
+            {fetching ? (
+              <><Skel className="h-6 w-8 mb-2" /><Skel className="h-2.5 w-16" /></>
+            ) : (
+              <>
+                <div className="text-xl font-bold mb-1" style={{ color: s.color }}>{s.value}</div>
+                <div className="mono text-white/28 text-[10px]">{s.label}</div>
+              </>
+            )}
           </div>
         ))}
       </div>
 
       {/* Input */}
       <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-[#f59e0b]/60 mb-3">● novo lead ou atualização</div>
+        <div className="mono text-[#f59e0b]/50 text-xs mb-3">● novo lead ou atualização</div>
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAdd(); }}
           placeholder="Ex: Falei com João da Loja XYZ hoje, e-commerce de moda, interessado no Pro, follow-up em 3 dias..."
           rows={3}
-          className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none"
+          className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
           <span className="text-white/20 text-xs">⌘+Enter · Claude estrutura automaticamente</span>
@@ -379,75 +305,86 @@ export default function Pipeline() {
             disabled={loading || !input.trim()}
             className="bg-[#f59e0b] hover:bg-[#fbbf24] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
           >
-            {loading ? 'Processando...' : 'Adicionar →'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
+                Processando...
+              </span>
+            ) : 'Adicionar →'}
           </button>
         </div>
       </div>
 
-      {/* Kanban */}
-      <div className="mono text-white/25 mb-3">pipeline</div>
-
-      {loadingPage ? (
-        <div className="flex items-center gap-2 text-white/30 text-sm">
-          <div className="w-4 h-4 border border-white/20 border-t-white/60 rounded-full animate-spin" />
-          carregando leads...
-        </div>
-      ) : (
-        <div className="grid grid-cols-5 gap-3">
+      {/* Kanban — overflow horizontal em telas pequenas */}
+      <div className="mono text-white/25 text-xs mb-3">pipeline</div>
+      <div className="overflow-x-auto pb-2">
+        <div className="grid grid-cols-5 gap-3" style={{ minWidth: 800 }}>
           {STAGES.map(col => (
-            <div key={col.key} className="bg-[#141414] border border-white/5 rounded-xl p-3 min-h-[220px]">
-              <div className="mono mb-3 flex items-center justify-between">
-                <span style={{ color: col.color }}>{col.label}</span>
-                <span className="text-white/20">{byStage(col.key).length}</span>
+            <div key={col.key} className="bg-[#141414] border border-white/5 rounded-xl p-3 min-h-[240px]">
+              {/* Col header */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="mono text-[10px] font-semibold" style={{ color: col.color }}>
+                  {col.label}
+                </span>
+                <span
+                  className="text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full mono"
+                  style={{ color: col.color, background: `${col.color}18` }}
+                >
+                  {byStage(col.key).length}
+                </span>
               </div>
-              <div className="flex flex-col gap-2">
-                {byStage(col.key).length === 0 && (
-                  <div className="text-white/15 text-xs text-center mt-8">vazio</div>
-                )}
-                {byStage(col.key).map(l => (
-                  <div
-                    key={l.id}
-                    onClick={() => setSelectedLead(l)}
-                    className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 cursor-pointer hover:border-white/15 hover:bg-[#202020] transition-all"
-                  >
-                    <div className="text-white/80 text-xs font-medium leading-snug mb-1">
-                      {l.company}
+
+              {/* Skeleton */}
+              {fetching && (
+                <div className="flex flex-col gap-2">
+                  {col.key === 'prospect' && [1,2].map(i => (
+                    <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
+                      <Skel className="h-3 w-full mb-2" />
+                      <Skel className="h-2 w-2/3 mb-2" />
+                      <Skel className="h-2 w-1/2" />
                     </div>
-                    {l.name && (
-                      <div className="text-white/35 text-[10px] mb-1">{l.name}</div>
-                    )}
-                    {l.notes && (
-                      <div className="text-white/25 text-[10px] leading-snug line-clamp-2 mb-2">
-                        {l.notes}
+                  ))}
+                </div>
+              )}
+
+              {/* Cards */}
+              {!fetching && (
+                <div className="flex flex-col gap-2">
+                  {byStage(col.key).length === 0 && (
+                    <div className="text-white/10 text-xs text-center mt-10">vazio</div>
+                  )}
+                  {byStage(col.key).map(l => (
+                    <div
+                      key={l.id}
+                      onClick={() => setSelectedLead(l)}
+                      className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 cursor-pointer hover:border-white/15 hover:bg-[#1e1e1e] transition-all"
+                    >
+                      <div className="text-white/80 text-xs font-medium leading-snug mb-0.5">{l.company}</div>
+                      {l.name && <div className="text-white/30 text-[10px] mb-1.5">{l.name}</div>}
+                      {l.notes && (
+                        <div className="text-white/22 text-[10px] leading-snug line-clamp-2 mb-2">{l.notes}</div>
+                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {l.follow_up_at && (
+                          <span className="mono text-[#f59e0b]/55 text-[9px]">
+                            📅 {new Date(l.follow_up_at + 'T00:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })}
+                          </span>
+                        )}
+                        {l.mrr_est > 0 && (
+                          <span className="mono text-[#7aaa4a]/55 text-[9px]">R${l.mrr_est.toLocaleString('pt-BR')}</span>
+                        )}
+                        {l.phone && <span className="text-[9px] opacity-30">📞</span>}
+                        {l.contact_email && <span className="text-[9px] opacity-30">✉️</span>}
                       </div>
-                    )}
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {l.follow_up_at && (
-                        <span className="mono text-[#f59e0b]/60 text-[9px]">
-                          📅 {new Date(l.follow_up_at + 'T00:00:00').toLocaleDateString('pt-BR')}
-                        </span>
-                      )}
-                      {l.mrr_est > 0 && (
-                        <span className="mono text-[#7aaa4a]/60 text-[9px]">
-                          R${l.mrr_est.toLocaleString('pt-BR')}
-                        </span>
-                      )}
-                      {l.phone && (
-                        <span className="mono text-white/25 text-[9px]">📞</span>
-                      )}
-                      {l.contact_email && (
-                        <span className="mono text-white/25 text-[9px]">✉️</span>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* Painel de detalhes */}
       {selectedLead && (
         <LeadPanel
           lead={selectedLead}

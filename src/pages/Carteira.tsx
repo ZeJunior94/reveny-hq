@@ -145,7 +145,7 @@ export default function Carteira() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-white/5 p-4 flex gap-3">
+        <div className="border-t border-white/5 p-4 flex gap-3 focus-within:border-white/12 transition-colors">
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

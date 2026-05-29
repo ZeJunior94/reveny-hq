@@ -22,19 +22,25 @@ interface Feature {
   created_at: string;
 }
 
-const STATUS_LABELS: Record<Status, string> = {
-  ideia: 'IDEIA',
-  aprovada: 'APROVADA',
-  building: 'BUILDING',
-  done: 'DONE',
-};
+const COLS: { key: Status; label: string; color: string }[] = [
+  { key: 'ideia',    label: 'IDEIA',    color: '#e5e5e5' },
+  { key: 'aprovada', label: 'APROVADA', color: '#7aaa4a' },
+  { key: 'building', label: 'BUILDING', color: '#60a5fa' },
+  { key: 'done',     label: 'DONE',     color: '#34d399' },
+];
 
-const STATUS_COLORS: Record<Status, string> = {
-  ideia: '#e5e5e5',
-  aprovada: '#7aaa4a',
-  building: '#60a5fa',
-  done: '#34d399',
-};
+function Skel({ className }: { className?: string }) {
+  return <div className={`bg-white/5 rounded-lg animate-pulse ${className ?? ''}`} />;
+}
+
+function IceBadge({ ice }: { ice: number }) {
+  const color = ice >= 8 ? '#7aaa4a' : ice >= 6 ? '#f59e0b' : '#ef4444';
+  return (
+    <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ color, background: `${color}18` }}>
+      ICE {ice}
+    </span>
+  );
+}
 
 export default function PM() {
   const { token } = useAuth();
@@ -44,28 +50,15 @@ export default function PM() {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const authHeaders = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
-
+  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
   const byStatus = (s: Status) => features.filter((f) => f.status === s);
 
-  // Carregar features do Supabase ao montar
   useEffect(() => {
-    async function load() {
-      try {
-        const r = await fetch(`${PROXY}/api/hq/pm/features`, { headers: authHeaders });
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || 'Erro ao carregar');
-        setFeatures(data);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Erro ao carregar features');
-      } finally {
-        setFetching(false);
-      }
-    }
-    load();
+    fetch(`${PROXY}/api/hq/pm/features`, { headers: authHeaders })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setFeatures(data); })
+      .catch(e => setError(e.message))
+      .finally(() => setFetching(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -80,8 +73,8 @@ export default function PM() {
         body: JSON.stringify({ idea: input.trim() }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || 'Erro na análise');
-      setFeatures((prev) => [data, ...prev]);
+      if (!r.ok) throw new Error(data.error || 'Erro');
+      setFeatures(prev => [data, ...prev]);
       setInput('');
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Erro');
@@ -91,35 +84,31 @@ export default function PM() {
   }
 
   async function moveStatus(id: string, status: Status) {
-    setFeatures((prev) => prev.map((f) => (f.id === id ? { ...f, status } : f)));
+    setFeatures(prev => prev.map(f => f.id === id ? { ...f, status } : f));
     await fetch(`${PROXY}/api/hq/pm/features/${id}`, {
-      method: 'PATCH',
-      headers: authHeaders,
-      body: JSON.stringify({ status }),
+      method: 'PATCH', headers: authHeaders, body: JSON.stringify({ status }),
     });
   }
 
   async function deleteFeature(id: string) {
     if (!confirm('Remover esta feature?')) return;
-    setFeatures((prev) => prev.filter((f) => f.id !== id));
-    await fetch(`${PROXY}/api/hq/pm/features/${id}`, {
-      method: 'DELETE',
-      headers: authHeaders,
-    });
+    setFeatures(prev => prev.filter(f => f.id !== id));
+    await fetch(`${PROXY}/api/hq/pm/features/${id}`, { method: 'DELETE', headers: authHeaders });
   }
 
   return (
-    <div className="p-10 max-w-5xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">PM de Features</h1>
-        <p className="mono text-white/30">ideias → ICE Score → backlog</p>
-        <div className="flex gap-4 mt-3">
-          {(['ideia', 'aprovada', 'building', 'done'] as Status[]).map((s) => (
-            <span key={s} className="text-xs text-white/30">
-              <span className="font-semibold" style={{ color: STATUS_COLORS[s] }}>
-                {byStatus(s).length}
-              </span>{' '}
-              {s}
+    <div className="p-10">
+      {/* Header */}
+      <div className="mb-8 flex items-end justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-1">PM de Features</h1>
+          <p className="mono text-white/30 text-sm">ideias → ICE Score → backlog</p>
+        </div>
+        <div className="flex gap-4">
+          {COLS.map((c) => (
+            <span key={c.key} className="text-xs text-white/30">
+              <span className="font-bold" style={{ color: c.color }}>{byStatus(c.key).length}</span>
+              {' '}{c.key}
             </span>
           ))}
         </div>
@@ -127,14 +116,14 @@ export default function PM() {
 
       {/* Input */}
       <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-white/40 mb-3">● nova ideia de feature</div>
+        <div className="mono text-white/35 text-xs mb-3">● nova ideia de feature</div>
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAnalyze(); }}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleAnalyze(); }}
           placeholder="Ex: quero que o usuário possa escolher o tom de voz antes de gerar o email..."
           rows={3}
-          className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none"
+          className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
           <span className="text-white/20 text-xs">⌘+Enter para analisar</span>
@@ -143,87 +132,112 @@ export default function PM() {
             disabled={loading || !input.trim()}
             className="bg-[#7aaa4a] hover:bg-[#8dc055] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
           >
-            {loading ? 'Analisando...' : 'Analisar →'}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
+                Analisando...
+              </span>
+            ) : 'Analisar →'}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
+        <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
           {error}
         </div>
       )}
 
-      {/* Kanban */}
-      <div className="mono text-white/25 mb-3">backlog</div>
+      {/* Kanban — overflow horizontal em telas pequenas */}
+      <div className="mono text-white/25 text-xs mb-3">backlog</div>
+      <div className="overflow-x-auto pb-2">
+        <div className="grid grid-cols-4 gap-3" style={{ minWidth: 720 }}>
+          {COLS.map((col) => (
+            <div key={col.key} className="bg-[#141414] border border-white/5 rounded-xl p-4 min-h-[260px]">
+              {/* Col header */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="mono text-[11px] font-semibold" style={{ color: col.color }}>
+                  {col.label}
+                </span>
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mono"
+                  style={{ color: col.color, background: `${col.color}18` }}
+                >
+                  {byStatus(col.key).length}
+                </span>
+              </div>
 
-      {fetching ? (
-        <div className="text-white/20 text-sm">Carregando...</div>
-      ) : (
-        <div className="grid grid-cols-4 gap-3">
-          {(['ideia', 'aprovada', 'building', 'done'] as Status[]).map((col) => (
-            <div key={col} className="bg-[#141414] border border-white/5 rounded-xl p-4 min-h-[200px]">
-              <div className="mono mb-3" style={{ color: STATUS_COLORS[col] }}>
-                {STATUS_LABELS[col]}
-                <span className="ml-2 text-white/20">{byStatus(col).length}</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                {byStatus(col).length === 0 && (
-                  <div className="text-white/15 text-xs text-center mt-6">vazio</div>
-                )}
-                {byStatus(col).map((f) => (
-                  <div
-                    key={f.id}
-                    className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 group"
-                  >
-                    <div className="text-white/80 text-xs font-medium mb-1 leading-snug">
-                      {f.title}
+              {/* Skeleton */}
+              {fetching && col.key === 'ideia' && (
+                <div className="flex flex-col gap-2">
+                  {[1, 2].map(i => (
+                    <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
+                      <Skel className="h-3 w-full mb-2" />
+                      <Skel className="h-2.5 w-2/3 mb-3" />
+                      <Skel className="h-5 w-14 rounded-full" />
                     </div>
-                    {f.ice_reasoning && (
-                      <div className="text-white/30 text-[10px] mb-2 leading-snug">
-                        {f.ice_reasoning}
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className="text-xs font-bold"
-                          style={{ color: f.ice >= 8 ? '#7aaa4a' : f.ice >= 6 ? '#f59e0b' : '#ef4444' }}
-                        >
-                          ICE {f.ice}
-                        </span>
-                        {f.ice_impact && (
-                          <span className="text-[9px] text-white/20 mono">
-                            {f.ice_impact}/{f.ice_confidence}/{f.ice_ease}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <select
-                          value={f.status}
-                          onChange={(e) => moveStatus(f.id, e.target.value as Status)}
-                          className="bg-transparent text-white/30 text-[10px] focus:outline-none cursor-pointer"
-                        >
-                          <option value="ideia">ideia</option>
-                          <option value="aprovada">aprovada</option>
-                          <option value="building">building</option>
-                          <option value="done">done</option>
-                        </select>
-                        <button
-                          onClick={() => deleteFeature(f.id)}
-                          className="text-white/15 hover:text-red-400 text-[10px] transition-colors"
-                        >
-                          ×
-                        </button>
+                  ))}
+                </div>
+              )}
+              {fetching && col.key !== 'ideia' && (
+                <div className="text-white/10 text-xs text-center mt-10">—</div>
+              )}
+
+              {/* Cards */}
+              {!fetching && (
+                <div className="flex flex-col gap-2">
+                  {byStatus(col.key).length === 0 && (
+                    <div className="text-white/12 text-xs text-center mt-10">vazio</div>
+                  )}
+                  {byStatus(col.key).map(f => (
+                    <div
+                      key={f.id}
+                      className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 group hover:border-white/10 transition-colors"
+                    >
+                      <p className="text-white/80 text-xs font-medium leading-snug mb-1.5">
+                        {f.title}
+                      </p>
+                      {f.ice_reasoning && (
+                        <p className="text-white/28 text-[10px] leading-snug mb-2.5">
+                          {f.ice_reasoning}
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <IceBadge ice={f.ice} />
+                          {f.ice_impact && (
+                            <span className="text-[9px] text-white/20 mono">
+                              {f.ice_impact}/{f.ice_confidence}/{f.ice_ease}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <select
+                            value={f.status}
+                            onChange={e => moveStatus(f.id, e.target.value as Status)}
+                            className="bg-[#111] text-white/30 text-[10px] focus:outline-none cursor-pointer rounded px-1"
+                          >
+                            <option value="ideia">ideia</option>
+                            <option value="aprovada">aprovada</option>
+                            <option value="building">building</option>
+                            <option value="done">done</option>
+                          </select>
+                          <button
+                            onClick={() => deleteFeature(f.id)}
+                            className="text-white/15 hover:text-red-400 text-sm transition-colors leading-none px-1"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }

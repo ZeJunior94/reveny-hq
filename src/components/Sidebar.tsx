@@ -1,24 +1,20 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  LayoutDashboard, Lightbulb, Wrench, TrendingUp, Users, PenLine, BookOpen, LogOut,
+} from 'lucide-react';
 
-interface NavItem {
-  path: string;
-  label: string;
-  color: string;
-  badge?: number;
-}
-
-const NAV: NavItem[] = [
-  { path: '/',          label: 'Hub',            color: '#e5e5e5' },
-  { path: '/pm',        label: 'PM de Features', color: '#7aaa4a' },
-  { path: '/builder',   label: 'Builder',        color: '#60a5fa' },
-  { path: '/pipeline',  label: 'Pipeline',       color: '#f59e0b' },
-  { path: '/carteira',  label: 'Carteira',       color: '#34d399' },
-  { path: '/conteudo',  label: 'Conteúdo',       color: '#a78bfa' },
+const NAV = [
+  { path: '/',         label: 'Hub',            icon: LayoutDashboard, color: '#e5e5e5' },
+  { path: '/pm',       label: 'PM de Features', icon: Lightbulb,       color: '#7aaa4a' },
+  { path: '/builder',  label: 'Builder',        icon: Wrench,          color: '#60a5fa' },
+  { path: '/pipeline', label: 'Pipeline',       icon: TrendingUp,      color: '#f59e0b' },
+  { path: '/carteira', label: 'Carteira',       icon: Users,           color: '#34d399' },
+  { path: '/conteudo', label: 'Conteúdo',       icon: PenLine,         color: '#a78bfa' },
 ];
 
-const NAV_CONFIG: NavItem[] = [
-  { path: '/contexto',  label: 'Contexto',       color: '#ffffff' },
+const NAV_CONFIG = [
+  { path: '/contexto', label: 'Contexto', icon: BookOpen, color: '#ffffff60' },
 ];
 
 export default function Sidebar() {
@@ -30,16 +26,16 @@ export default function Sidebar() {
       className="flex flex-col border-r border-white/5 bg-[#111111] min-h-screen py-5"
     >
       {/* Logo */}
-      <div className="px-5 mb-8 flex items-center gap-2">
-        <div className="w-7 h-7 rounded bg-[#7aaa4a] flex items-center justify-center font-bold text-black text-sm">
+      <div className="px-5 mb-7 flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-lg bg-[#7aaa4a] flex items-center justify-center font-bold text-black text-sm flex-shrink-0">
           R
         </div>
-        <span className="font-semibold text-white tracking-tight">
+        <span className="font-semibold text-white tracking-tight text-sm">
           REVENY <span className="text-[#7aaa4a]">HQ</span>
         </span>
       </div>
 
-      {/* Nav */}
+      {/* Nav principal */}
       <nav className="flex-1 flex flex-col gap-0.5 px-2">
         {NAV.map((item) => (
           <NavLink
@@ -47,18 +43,19 @@ export default function Sidebar() {
             to={item.path}
             end={item.path === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors ${
+              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
                 isActive
                   ? 'bg-white/8 text-white'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/4'
+                  : 'text-white/45 hover:text-white/80 hover:bg-white/4'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: isActive ? item.color : '#ffffff30' }}
+                <item.icon
+                  size={15}
+                  className="flex-shrink-0 transition-colors"
+                  style={{ color: isActive ? item.color : 'rgba(255,255,255,0.3)' }}
                 />
                 <span>{item.label}</span>
               </>
@@ -67,25 +64,27 @@ export default function Sidebar() {
         ))}
 
         {/* Separador */}
-        <div className="my-2 border-t border-white/5 mx-1" />
+        <div className="my-2.5 border-t border-white/5 mx-1" />
 
+        {/* Config */}
         {NAV_CONFIG.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2 rounded-md text-xs transition-colors ${
+              `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all ${
                 isActive
-                  ? 'bg-white/8 text-white'
-                  : 'text-white/30 hover:text-white/60 hover:bg-white/4'
+                  ? 'bg-white/8 text-white/70'
+                  : 'text-white/25 hover:text-white/50 hover:bg-white/4'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <span
-                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                  style={{ background: isActive ? '#ffffff' : '#ffffff25' }}
+                <item.icon
+                  size={13}
+                  className="flex-shrink-0"
+                  style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)' }}
                 />
                 <span>{item.label}</span>
               </>
@@ -95,12 +94,12 @@ export default function Sidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="px-2 mt-4">
+      <div className="px-2 mt-4 border-t border-white/5 pt-4">
         <button
           onClick={logout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-white/30 hover:text-white/60 hover:bg-white/4 transition-colors"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/25 hover:text-white/55 hover:bg-white/4 transition-all"
         >
-          <span className="w-2 h-2 rounded-full bg-white/10 flex-shrink-0" />
+          <LogOut size={14} className="flex-shrink-0" />
           Sair
         </button>
       </div>
