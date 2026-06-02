@@ -6,22 +6,16 @@ const PROXY = (
   || 'https://mailflow-seu-email-inteligente-production.up.railway.app'
 ).trim();
 
-interface PRD {
-  id: string;
-  feature: string;
-  content: string;
-  tasks: string[];
-  created_at: string;
-}
+interface PRD { id: string; feature: string; content: string; tasks: string[]; created_at: string; }
+interface Feature { id: string; title: string; status: string; }
 
-interface Feature {
-  id: string;
-  title: string;
-  status: string;
-}
+const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+const ACCENT = '#4a7fa5';
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
 }
 
 export default function Builder() {
@@ -54,8 +48,7 @@ export default function Builder() {
   async function handleGenerate(featureText?: string) {
     const text = featureText ?? input.trim();
     if (!text || loading) return;
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const r = await fetch(`${PROXY}/api/hq/builder/prd`, {
         method: 'POST', headers: authHeaders, body: JSON.stringify({ feature: text }),
@@ -65,11 +58,8 @@ export default function Builder() {
       setPrds(prev => [data, ...prev]);
       setSelected(data);
       setInput('');
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erro'); }
+    finally { setLoading(false); }
   }
 
   async function deletePrd(id: string) {
@@ -82,11 +72,8 @@ export default function Builder() {
   async function clearAll() {
     if (!confirm('Remover todos os PRDs?')) return;
     const ids = prds.map(p => p.id);
-    setPrds([]);
-    setSelected(null);
-    await Promise.all(ids.map(id =>
-      fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authHeaders })
-    ));
+    setPrds([]); setSelected(null);
+    await Promise.all(ids.map(id => fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authHeaders })));
   }
 
   function handleCopy(text: string) {
@@ -96,22 +83,24 @@ export default function Builder() {
   }
 
   return (
-    <div className="p-10 max-w-5xl">
+    <div className="p-8 max-w-5xl">
       {/* Header */}
-      <div className="mb-3">
-        <h1 className="text-2xl font-bold text-white mb-1">Builder de Features</h1>
-        <p className="mono text-white/30 text-sm">PRD completo + tasks para Claude Code</p>
+      <div className="mb-8">
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+          Builder de Features
+        </h1>
+        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+          PRD completo + tasks para Claude Code
+        </p>
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
-      <div className="border-t border-white/5 mb-8" />
 
-      {/* Features aprovadas no PM */}
-      <div className="mono text-white/25 text-xs mb-3">FEATURES APROVADAS NO PM</div>
+      {/* Features aprovadas */}
+      <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>Features aprovadas no PM</div>
       {fetching ? (
-        <div className="flex gap-2 mb-6">
-          {[1, 2].map(i => <Skel key={i} className="h-8 w-40 rounded-lg" />)}
-        </div>
+        <div className="flex gap-2 mb-6">{[1,2].map(i => <Skel key={i} className="h-8 w-40 rounded-lg" />)}</div>
       ) : approved.length === 0 ? (
-        <p className="text-white/25 text-sm mb-6">Nenhuma feature aprovada no PM ainda.</p>
+        <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.25)', marginBottom: '1.5rem' }}>Nenhuma feature aprovada no PM ainda.</p>
       ) : (
         <div className="flex flex-wrap gap-2 mb-6">
           {approved.map(f => (
@@ -119,7 +108,8 @@ export default function Builder() {
               key={f.id}
               onClick={() => handleGenerate(f.title)}
               disabled={loading}
-              className="text-xs px-3 py-1.5 rounded-lg border border-[#7aaa4a]/25 text-[#7aaa4a]/70 hover:border-[#7aaa4a]/50 hover:text-[#7aaa4a] hover:bg-[#7aaa4a]/8 transition-all disabled:opacity-40"
+              style={{ fontSize: '0.75rem', padding: '0.35rem 0.85rem', borderRadius: 6, border: '1px solid rgba(122,170,74,.25)', color: 'rgba(122,170,74,.7)', background: 'transparent', cursor: 'pointer', transition: 'all .15s' }}
+              className="hover:border-[#7aaa4a]/50 hover:text-[#7aaa4a] hover:bg-[#7aaa4a]/8 disabled:opacity-40"
             >
               {f.title}
             </button>
@@ -128,9 +118,9 @@ export default function Builder() {
       )}
 
       {/* Input */}
-      <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-6">
-        <div className="mono text-[#60a5fa]/60 text-xs mb-3">● OU DESCREVA DIRETAMENTE</div>
-        <div className="border-t border-white/5 mb-4" />
+      <div style={{ ...card, padding: '1.25rem', marginBottom: '1.5rem' }}>
+        <div style={{ ...sectionLabel, color: `${ACCENT}99`, marginBottom: '0.85rem' }}>● Ou descreva diretamente</div>
+        <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -139,16 +129,16 @@ export default function Builder() {
           rows={3}
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-          <span className="mono text-white/20 text-xs">⌘+Enter para gerar PRD</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter para gerar PRD</span>
           <button
             onClick={() => handleGenerate()}
             disabled={loading || !input.trim()}
-            className="bg-[#60a5fa] hover:bg-[#7db8fb] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            style={{ background: ACCENT, color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: loading || !input.trim() ? 0.4 : 1 }}
           >
             {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />
                 Gerando...
               </span>
             ) : 'Gerar PRD →'}
@@ -157,19 +147,16 @@ export default function Builder() {
       </div>
 
       {error && (
-        <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">{error}</div>
+        <div style={{ marginBottom: '1rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>{error}</div>
       )}
 
       {/* PRDs list */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="mono text-white/25 text-xs">PRDS GERADOS</div>
-        <div className="flex items-center gap-3">
-          {!fetching && <span className="mono text-white/18 text-xs">{prds.length} total</span>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+        <span style={sectionLabel}>PRDs gerados</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {!fetching && <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.18)' }}>{prds.length} total</span>}
           {!fetching && prds.length > 0 && (
-            <button
-              onClick={clearAll}
-              className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
-            >
+            <button onClick={clearAll} style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>
               limpar tudo
             </button>
           )}
@@ -178,37 +165,36 @@ export default function Builder() {
 
       {fetching ? (
         <div className="grid grid-cols-3 gap-3 mb-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-[#141414] border border-white/5 rounded-xl p-4">
-              <Skel className="h-3 w-full mb-2" />
-              <Skel className="h-3 w-3/4 mb-4" />
-              <Skel className="h-2.5 w-16" />
+          {[1,2,3].map(i => (
+            <div key={i} style={{ ...card, padding: '1rem' }}>
+              <Skel className="h-3 w-full mb-2" /><Skel className="h-3 w-3/4 mb-4" /><Skel className="h-2.5 w-16" />
             </div>
           ))}
         </div>
       ) : prds.length === 0 ? (
-        <div className="text-white/18 text-sm mb-6">Nenhum PRD gerado ainda.</div>
+        <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.18)', marginBottom: '1.5rem' }}>Nenhum PRD gerado ainda.</div>
       ) : (
         <div className="grid grid-cols-3 gap-3 mb-6">
           {prds.map(p => (
             <button
               key={p.id}
               onClick={() => setSelected(selected?.id === p.id ? null : p)}
-              className={`text-left rounded-xl p-4 transition-all group border ${
-                selected?.id === p.id
-                  ? 'bg-[#60a5fa]/5 border-[#60a5fa]/35'
-                  : 'bg-[#141414] border-white/5 hover:border-white/12'
-              }`}
+              className="text-left transition-all group"
+              style={selected?.id === p.id
+                ? { background: `rgba(74,127,165,.1)`, border: `1px solid rgba(74,127,165,.35)`, borderRadius: 8, padding: '1rem' }
+                : { ...card, padding: '1rem' }
+              }
             >
-              <div className="text-white/80 text-xs font-medium mb-2 leading-snug line-clamp-2">{p.feature}</div>
-              <div className="flex items-center justify-between">
-                <div className="mono text-white/25 text-[10px]">{p.tasks?.length ?? 0} tasks</div>
+              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, marginBottom: '0.5rem', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {p.feature}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.25)' }}>{p.tasks?.length ?? 0} tasks</div>
                 <button
                   onClick={e => { e.stopPropagation(); deletePrd(p.id); }}
-                  className="text-white/10 hover:text-red-400 text-sm opacity-0 group-hover:opacity-100 transition-all"
-                >
-                  ×
-                </button>
+                  style={{ color: 'rgba(255,255,255,.12)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
+                  className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
+                >×</button>
               </div>
             </button>
           ))}
@@ -217,24 +203,25 @@ export default function Builder() {
 
       {/* PRD Detail */}
       {selected && (
-        <div className="bg-[#141414] border border-white/5 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="mono text-[#60a5fa] text-xs">{selected.feature}</div>
+        <div style={{ ...card, padding: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.72rem', color: ACCENT }}>{selected.feature}</div>
             <button
-              onClick={() => handleCopy(selected.content + '\n\nTasks:\n' + selected.tasks?.map((t, i) => `${i+1}. ${t}`).join('\n'))}
-              className="text-white/25 text-xs hover:text-white/55 transition-colors"
+              onClick={() => handleCopy(selected.content + '\n\nTasks:\n' + selected.tasks?.map((t,i) => `${i+1}. ${t}`).join('\n'))}
+              style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer' }}
+              className="hover:text-white/60 transition-colors"
             >
               {copied ? '✓ copiado' : 'copiar'}
             </button>
           </div>
-          <pre className="text-white/55 text-xs leading-relaxed whitespace-pre-wrap font-mono">{selected.content}</pre>
+          <pre style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{selected.content}</pre>
           {selected.tasks && selected.tasks.length > 0 && (
-            <div className="mt-5 pt-5 border-t border-white/5">
-              <div className="mono text-white/25 text-xs mb-3">tasks para claude code</div>
+            <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
+              <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>Tasks para Claude Code</div>
               <div className="flex flex-col gap-2">
                 {selected.tasks.map((t, i) => (
-                  <div key={i} className="flex gap-2.5 text-xs text-white/50">
-                    <span className="text-[#60a5fa]/40 font-mono flex-shrink-0 w-5">{String(i + 1).padStart(2, '0')}.</span>
+                  <div key={i} style={{ display: 'flex', gap: 10, fontSize: '0.75rem', color: 'rgba(255,255,255,.5)' }}>
+                    <span style={{ color: `${ACCENT}60`, fontFamily: 'monospace', flexShrink: 0, width: 20 }}>{String(i+1).padStart(2,'0')}.</span>
                     {t}
                   </div>
                 ))}

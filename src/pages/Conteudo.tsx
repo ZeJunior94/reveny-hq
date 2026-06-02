@@ -9,71 +9,40 @@ const PROXY = (
 type Platform = 'linkedin' | 'tweet' | 'story';
 type PostStatus = 'rascunho' | 'pronto' | 'publicado';
 
-interface Post {
-  id: string;
-  platform: Platform;
-  topic: string;
-  content: string;
-  status: PostStatus;
-  created_at: string;
-}
+interface Post { id: string; platform: Platform; topic: string; content: string; status: PostStatus; created_at: string; }
 
-const PLATFORM_LABELS: Record<Platform, string> = {
-  linkedin: 'LinkedIn',
-  tweet: 'Tweet',
-  story: 'Story',
-};
-
-const PLATFORM_COLORS: Record<Platform, string> = {
-  linkedin: '#60a5fa',
-  tweet: '#38bdf8',
-  story: '#a78bfa',
-};
-
-const STATUS_COLORS: Record<PostStatus, string> = {
-  rascunho: '#f59e0b',
-  pronto: '#60a5fa',
-  publicado: '#7aaa4a',
-};
-
+const PLATFORM_LABELS: Record<Platform, string> = { linkedin: 'LinkedIn', tweet: 'Tweet', story: 'Story' };
+const PLATFORM_COLORS: Record<Platform, string> = { linkedin: '#4a7fa5', tweet: '#7aaec7', story: '#a78bfa' };
+const STATUS_COLORS: Record<PostStatus, string> = { rascunho: '#f59e0b', pronto: '#4a7fa5', publicado: '#7aaa4a' };
 const PLACEHOLDERS: Record<Platform, string> = {
   linkedin: 'Ex: estamos lançando templates novos para moda, quero mostrar como a IA gera o banner...',
   tweet: 'Ex: o que aprendi buildando um gerador de email com IA em 3 meses...',
   story: 'Ex: bastidores do desenvolvimento do novo template wellness...',
 };
+const FILTER_LABELS: Record<PostStatus | 'todos', string> = { todos: 'Todos', rascunho: 'Rascunho', pronto: 'Pronto', publicado: 'Publicado' };
 
-const FILTER_LABELS: Record<PostStatus | 'todos', string> = {
-  todos: 'Todos',
-  rascunho: 'Rascunho',
-  pronto: 'Pronto',
-  publicado: 'Publicado',
-};
-
-const INPUT_CLS =
-  'w-full bg-[#1a1a1a] border border-white/6 rounded-lg px-3 py-2.5 text-white/80 text-sm leading-relaxed resize-none focus:outline-none focus:border-white/20 focus:bg-[#1e1e1e] transition-all placeholder-white/20';
+const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
 }
 
 export default function Conteudo() {
   const { token } = useAuth();
   const [platform, setPlatform] = useState<Platform>('linkedin');
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [input, setInput]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [filter, setFilter] = useState<PostStatus | 'todos'>('todos');
+  const [posts, setPosts]       = useState<Post[]>([]);
+  const [filter, setFilter]     = useState<PostStatus | 'todos'>('todos');
   const [selected, setSelected] = useState<Post | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [error, setError]       = useState<string | null>(null);
+  const [copied, setCopied]     = useState<string | null>(null);
 
-  const authHeaders = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
-
-  const filtered = filter === 'todos' ? posts : posts.filter((p) => p.status === filter);
+  const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+  const filtered = filter === 'todos' ? posts : posts.filter(p => p.status === filter);
 
   useEffect(() => {
     async function load() {
@@ -83,11 +52,8 @@ export default function Conteudo() {
         if (!r.ok) throw new Error(data.error || 'Erro ao carregar');
         setPosts(data);
         if (data.length > 0) setSelected(data[0]);
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Erro ao carregar posts');
-      } finally {
-        setFetching(false);
-      }
+      } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erro ao carregar posts'); }
+      finally { setFetching(false); }
     }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -95,51 +61,38 @@ export default function Conteudo() {
 
   async function handleGenerate() {
     if (!input.trim() || loading) return;
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const r = await fetch(`${PROXY}/api/hq/content/generate`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ platform, topic: input.trim() }),
+        method: 'POST', headers: authHeaders, body: JSON.stringify({ platform, topic: input.trim() }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error || 'Erro na geração');
-      setPosts((prev) => [data, ...prev]);
+      if (!r.ok) throw new Error(data.error || 'Erro');
+      setPosts(prev => [data, ...prev]);
       setSelected(data);
       setInput('');
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erro'); }
+    finally { setLoading(false); }
   }
 
   async function updateStatus(id: string, status: PostStatus) {
-    setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)));
-    if (selected?.id === id) setSelected((prev) => prev ? { ...prev, status } : prev);
-    await fetch(`${PROXY}/api/hq/content/posts/${id}`, {
-      method: 'PATCH', headers: authHeaders, body: JSON.stringify({ status }),
-    });
+    setPosts(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+    if (selected?.id === id) setSelected(prev => prev ? { ...prev, status } : prev);
+    await fetch(`${PROXY}/api/hq/content/posts/${id}`, { method: 'PATCH', headers: authHeaders, body: JSON.stringify({ status }) });
   }
 
   async function deletePost(id: string) {
     if (!confirm('Remover este post?')) return;
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+    setPosts(prev => prev.filter(p => p.id !== id));
     if (selected?.id === id) setSelected(null);
-    await fetch(`${PROXY}/api/hq/content/posts/${id}`, {
-      method: 'DELETE', headers: authHeaders,
-    });
+    await fetch(`${PROXY}/api/hq/content/posts/${id}`, { method: 'DELETE', headers: authHeaders });
   }
 
   async function clearAll() {
     if (!confirm('Remover todos os posts?')) return;
     const ids = posts.map(p => p.id);
-    setPosts([]);
-    setSelected(null);
-    await Promise.all(ids.map(id =>
-      fetch(`${PROXY}/api/hq/content/posts/${id}`, { method: 'DELETE', headers: authHeaders })
-    ));
+    setPosts([]); setSelected(null);
+    await Promise.all(ids.map(id => fetch(`${PROXY}/api/hq/content/posts/${id}`, { method: 'DELETE', headers: authHeaders })));
   }
 
   function handleCopy(id: string, text: string) {
@@ -148,73 +101,68 @@ export default function Conteudo() {
     setTimeout(() => setCopied(null), 1500);
   }
 
-  const postsByPlatform = (p: Platform) => posts.filter((x) => x.platform === p).length;
+  const postsByPlatform = (p: Platform) => posts.filter(x => x.platform === p).length;
 
   return (
-    <div className="p-10 max-w-5xl">
+    <div className="p-8 max-w-5xl">
       {/* Header */}
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Conteúdo & LinkedIn</h1>
-          <p className="mono text-white/30 text-sm">calendário editorial</p>
+      <div className="mb-8">
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+              Conteúdo & LinkedIn
+            </h1>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+              Calendário editorial
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {(['linkedin', 'tweet', 'story'] as Platform[]).map(p => (
+              <span key={p} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)' }}>
+                <span style={{ ...jakarta, fontWeight: 800, color: PLATFORM_COLORS[p] }}>{postsByPlatform(p)}</span>{' '}{PLATFORM_LABELS[p]}
+              </span>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-4">
-          {(['linkedin', 'tweet', 'story'] as Platform[]).map((p) => (
-            <span key={p} className="text-xs text-white/30">
-              <span className="font-bold" style={{ color: PLATFORM_COLORS[p] }}>
-                {postsByPlatform(p)}
-              </span>{' '}
-              {PLATFORM_LABELS[p]}
-            </span>
-          ))}
-        </div>
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
-      <div className="border-t border-white/5 mb-8" />
 
       <div className="grid grid-cols-[1fr_1.2fr] gap-6">
-        {/* Left: Input + List */}
+        {/* Left */}
         <div className="min-w-0">
           {/* Input */}
-          <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-5">
-            <div className="mono text-xs mb-4" style={{ color: `${PLATFORM_COLORS[platform]}70` }}>● GERAR POST</div>
-            <div className="border-t border-white/5 mb-4" />
+          <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+            <div style={{ ...sectionLabel, color: `${PLATFORM_COLORS[platform]}99`, marginBottom: '0.85rem' }}>● Gerar post</div>
+            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
 
-            {/* Platform tabs — bordered pill style */}
-            <div className="flex gap-2 mb-4">
-              {(['linkedin', 'tweet', 'story'] as Platform[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setPlatform(p)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                  style={platform === p
-                    ? { background: PLATFORM_COLORS[p], color: '#000' }
-                    : { border: `1px solid ${PLATFORM_COLORS[p]}30`, color: `${PLATFORM_COLORS[p]}60` }
-                  }
-                >
-                  {PLATFORM_LABELS[p]}
-                </button>
+            <div style={{ display: 'flex', gap: 6, marginBottom: '1rem' }}>
+              {(['linkedin', 'tweet', 'story'] as Platform[]).map(p => (
+                <button key={p} onClick={() => setPlatform(p)} style={platform === p
+                  ? { background: PLATFORM_COLORS[p], color: p === 'tweet' ? '#0b1520' : 'white', fontSize: '0.72rem', fontWeight: 600, padding: '0.3rem 0.75rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
+                  : { border: `1px solid ${PLATFORM_COLORS[p]}30`, color: `${PLATFORM_COLORS[p]}70`, fontSize: '0.72rem', padding: '0.3rem 0.75rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }
+                }>{PLATFORM_LABELS[p]}</button>
               ))}
             </div>
 
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
               placeholder={PLACEHOLDERS[platform]}
               rows={3}
-              className={INPUT_CLS}
+              className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
+              style={{ background: 'rgba(11,21,32,.3)', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,.8)', fontSize: '0.82rem', resize: 'none', width: '100%', outline: 'none', lineHeight: 1.6 }}
             />
-            <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-              <span className="mono text-white/20 text-xs">voz: direto, sem hype, founder real</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.2)' }}>voz: direto, sem hype, founder real</span>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
-                className="disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-                style={{ background: PLATFORM_COLORS[platform] }}
+                style={{ background: PLATFORM_COLORS[platform], color: platform === 'tweet' ? '#0b1520' : 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: loading || !input.trim() ? 0.4 : 1 }}
               >
                 {loading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />
                     Gerando...
                   </span>
                 ) : 'Gerar →'}
@@ -222,152 +170,90 @@ export default function Conteudo() {
             </div>
           </div>
 
-          {error && (
-            <div className="mb-4 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+          {error && <div style={{ marginBottom: '1rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>{error}</div>}
 
-          {/* Filter tabs — bordered pill style */}
-          <div className="flex items-center gap-2 mb-4">
-            {(['todos', 'rascunho', 'pronto', 'publicado'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={filter === f
-                  ? { background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.85)', border: '1px solid rgba(255,255,255,0.15)' }
-                  : { border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.3)' }
-                }
-              >
-                {FILTER_LABELS[f]}
-              </button>
+          {/* Filters */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '1rem' }}>
+            {(['todos', 'rascunho', 'pronto', 'publicado'] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)} style={filter === f
+                ? { background: 'rgba(74,127,165,.15)', color: 'rgba(255,255,255,.85)', border: '1px solid rgba(74,127,165,.25)', fontSize: '0.72rem', fontWeight: 500, padding: '0.3rem 0.75rem', borderRadius: 6, cursor: 'pointer' }
+                : { border: '1px solid rgba(74,127,165,.08)', color: 'rgba(255,255,255,.3)', fontSize: '0.72rem', padding: '0.3rem 0.75rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }
+              }>{FILTER_LABELS[f]}</button>
             ))}
           </div>
 
-          {/* Posts section header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="mono text-white/25 text-xs">POSTS</div>
+          {/* Posts header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+            <span style={sectionLabel}>Posts</span>
             {!fetching && posts.length > 0 && (
-              <button
-                onClick={clearAll}
-                className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
-              >
-                limpar tudo
-              </button>
+              <button onClick={clearAll} style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>limpar tudo</button>
             )}
           </div>
 
           {/* List */}
           {fetching ? (
             <div className="flex flex-col gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-[#141414] border border-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Skel className="h-3 w-14" />
-                    <Skel className="h-3 w-12" />
-                  </div>
-                  <Skel className="h-3 w-full mb-1.5" />
-                  <Skel className="h-3 w-3/4" />
+              {[1,2,3].map(i => (
+                <div key={i} style={{ ...card, padding: '1rem' }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: '0.5rem' }}><Skel className="h-3 w-14" /><Skel className="h-3 w-12" /></div>
+                  <Skel className="h-3 w-full mb-1.5" /><Skel className="h-3 w-3/4" />
                 </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-white/18 text-sm py-4">
+            <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.18)', padding: '1rem 0' }}>
               {posts.length === 0 ? 'Nenhum post ainda.' : 'Nenhum post nessa categoria.'}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {filtered.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelected(p)}
-                  className={`text-left rounded-xl p-4 transition-all border group ${
-                    selected?.id === p.id
-                      ? 'bg-[#1a1a1a] border-white/12'
-                      : 'bg-[#141414] border-white/5 hover:border-white/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span
-                      className="mono text-[10px] font-semibold"
-                      style={{ color: PLATFORM_COLORS[p.platform] }}
-                    >
-                      {PLATFORM_LABELS[p.platform]}
-                    </span>
-                    <span
-                      className="mono text-[10px] px-1.5 py-0.5 rounded"
-                      style={{ color: STATUS_COLORS[p.status], background: `${STATUS_COLORS[p.status]}15` }}
-                    >
-                      {p.status}
-                    </span>
+              {filtered.map(p => (
+                <button key={p.id} onClick={() => setSelected(p)} className="text-left transition-all" style={selected?.id === p.id
+                  ? { background: 'rgba(17,30,48,.9)', border: '1px solid rgba(74,127,165,.25)', borderRadius: 8, padding: '1rem' }
+                  : { ...card, padding: '1rem' }
+                }>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.4rem' }}>
+                    <span style={{ fontSize: '0.68rem', fontWeight: 600, color: PLATFORM_COLORS[p.platform] }}>{PLATFORM_LABELS[p.platform]}</span>
+                    <span style={{ fontSize: '0.62rem', color: STATUS_COLORS[p.status], background: `${STATUS_COLORS[p.status]}15`, padding: '0.1rem 0.4rem', borderRadius: 4 }}>{p.status}</span>
                   </div>
-                  <div className="text-white/45 text-xs leading-snug line-clamp-2">
-                    {p.content}
-                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.45)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.content}</div>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Right: Selected post detail */}
+        {/* Right: Detail */}
         <div className="min-w-0">
           {selected ? (
-            <div className="bg-[#141414] border border-white/5 rounded-xl p-5 sticky top-6">
-              <div className="flex items-center justify-between mb-4">
-                <span
-                  className="mono text-xs font-semibold"
-                  style={{ color: PLATFORM_COLORS[selected.platform] }}
-                >
-                  {PLATFORM_LABELS[selected.platform]}
-                </span>
-                <div className="flex items-center gap-3">
-                  <select
-                    value={selected.status}
-                    onChange={(e) => updateStatus(selected.id, e.target.value as PostStatus)}
-                    className="bg-[#111] text-white/30 text-[10px] focus:outline-none cursor-pointer rounded px-1 py-0.5"
-                  >
+            <div style={{ ...card, padding: '1.25rem' }} className="sticky top-6">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: PLATFORM_COLORS[selected.platform] }}>{PLATFORM_LABELS[selected.platform]}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <select value={selected.status} onChange={e => updateStatus(selected.id, e.target.value as PostStatus)}
+                    style={{ background: 'rgba(11,21,32,.8)', color: 'rgba(255,255,255,.4)', fontSize: '0.65rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.4rem' }}>
                     <option value="rascunho">rascunho</option>
                     <option value="pronto">pronto</option>
                     <option value="publicado">publicado</option>
                   </select>
-                  <button
-                    onClick={() => handleCopy(selected.id, selected.content)}
-                    className="text-white/25 text-xs hover:text-white/55 transition-colors"
-                  >
+                  <button onClick={() => handleCopy(selected.id, selected.content)} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-white/60 transition-colors">
                     {copied === selected.id ? '✓ copiado' : 'copiar'}
                   </button>
-                  <button
-                    onClick={() => deletePost(selected.id)}
-                    className="text-white/15 hover:text-red-400 text-xs transition-colors"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => deletePost(selected.id)} style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,.15)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors">×</button>
                 </div>
               </div>
-
-              {selected.topic && (
-                <div className="mono text-white/20 text-[10px] mb-3">
-                  tema: {selected.topic}
-                </div>
-              )}
-
-              <p className="text-white/65 text-sm leading-relaxed whitespace-pre-wrap">
-                {selected.content}
-              </p>
-
+              {selected.topic && <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.2)', marginBottom: '0.85rem' }}>tema: {selected.topic}</div>}
+              <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.65)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{selected.content}</p>
               {selected.platform === 'tweet' && (
-                <div className="mt-4 pt-3 border-t border-white/5">
-                  <span className={`mono text-[10px] ${selected.content.length > 280 ? 'text-red-400' : 'text-white/20'}`}>
+                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
+                  <span style={{ fontSize: '0.65rem', color: selected.content.length > 280 ? '#f87171' : 'rgba(255,255,255,.2)' }}>
                     {selected.content.length}/280 chars
                   </span>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-[#141414] border border-white/5 rounded-xl p-5 flex items-center justify-center min-h-[220px]">
-              <span className="text-white/15 text-sm">Selecione um post</span>
+            <div style={{ ...card, padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 220 }}>
+              <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.15)' }}>Selecione um post</span>
             </div>
           )}
         </div>

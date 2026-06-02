@@ -9,34 +9,32 @@ const PROXY = (
 type Status = 'ideia' | 'aprovada' | 'building' | 'done';
 
 interface Feature {
-  id: string;
-  title: string;
-  description: string;
-  ice: number;
-  ice_impact: number;
-  ice_confidence: number;
-  ice_ease: number;
-  ice_reasoning: string;
-  status: Status;
-  notes?: string;
-  created_at: string;
+  id: string; title: string; description: string;
+  ice: number; ice_impact: number; ice_confidence: number;
+  ice_ease: number; ice_reasoning: string; status: Status;
+  notes?: string; created_at: string;
 }
 
 const COLS: { key: Status; label: string; color: string }[] = [
-  { key: 'ideia',    label: 'IDEIA',    color: '#e5e5e5' },
-  { key: 'aprovada', label: 'APROVADA', color: '#7aaa4a' },
-  { key: 'building', label: 'BUILDING', color: '#60a5fa' },
-  { key: 'done',     label: 'DONE',     color: '#34d399' },
+  { key: 'ideia',    label: 'Ideia',    color: '#7aaec7' },
+  { key: 'aprovada', label: 'Aprovada', color: '#7aaa4a' },
+  { key: 'building', label: 'Building', color: '#4a7fa5' },
+  { key: 'done',     label: 'Done',     color: '#34d399' },
 ];
 
+const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
+const innerCard = { background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+
 function Skel({ className }: { className?: string }) {
-  return <div className={`bg-white/5 rounded-lg animate-pulse ${className ?? ''}`} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
 }
 
 function IceBadge({ ice }: { ice: number }) {
   const color = ice >= 8 ? '#7aaa4a' : ice >= 6 ? '#f59e0b' : '#ef4444';
   return (
-    <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ color, background: `${color}18` }}>
+    <span style={{ color, background: `${color}18`, fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: 4 }}>
       ICE {ice}
     </span>
   );
@@ -51,7 +49,7 @@ export default function PM() {
   const [error, setError] = useState<string | null>(null);
 
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-  const byStatus = (s: Status) => features.filter((f) => f.status === s);
+  const byStatus = (s: Status) => features.filter(f => f.status === s);
 
   useEffect(() => {
     fetch(`${PROXY}/api/hq/pm/features`, { headers: authHeaders })
@@ -64,23 +62,17 @@ export default function PM() {
 
   async function handleAnalyze() {
     if (!input.trim() || loading) return;
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const r = await fetch(`${PROXY}/api/hq/pm/analyze`, {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ idea: input.trim() }),
+        method: 'POST', headers: authHeaders, body: JSON.stringify({ idea: input.trim() }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro');
       setFeatures(prev => [data, ...prev]);
       setInput('');
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erro'); }
+    finally { setLoading(false); }
   }
 
   async function moveStatus(id: string, status: Status) {
@@ -100,40 +92,44 @@ export default function PM() {
     if (!confirm('Remover todas as features?')) return;
     const ids = features.map(f => f.id);
     setFeatures([]);
-    await Promise.all(ids.map(id =>
-      fetch(`${PROXY}/api/hq/pm/features/${id}`, { method: 'DELETE', headers: authHeaders })
-    ));
+    await Promise.all(ids.map(id => fetch(`${PROXY}/api/hq/pm/features/${id}`, { method: 'DELETE', headers: authHeaders })));
   }
 
   return (
-    <div className="p-10">
+    <div className="p-8">
       {/* Header */}
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">PM de Features</h1>
-          <p className="mono text-white/30 text-sm">ideias → ICE Score → backlog</p>
-        </div>
-        {!fetching && (
-          <div className="flex gap-5">
-            {[
-              { label: 'TOTAL',    value: features.length,            color: '#e5e5e5' },
-              { label: 'APROVADAS', value: byStatus('aprovada').length, color: '#7aaa4a' },
-              { label: 'BUILDING', value: byStatus('building').length, color: '#60a5fa' },
-            ].map(s => (
-              <div key={s.label} className="text-right">
-                <div className="text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
-                <div className="mono text-white/25 text-[9px]">{s.label}</div>
-              </div>
-            ))}
+      <div className="mb-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+              PM de Features
+            </h1>
+            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+              Ideias → ICE Score → backlog
+            </p>
           </div>
-        )}
+          {!fetching && (
+            <div className="flex gap-6">
+              {[
+                { label: 'Total',    value: features.length,            color: 'white' },
+                { label: 'Aprovadas', value: byStatus('aprovada').length, color: '#7aaa4a' },
+                { label: 'Building', value: byStatus('building').length, color: '#4a7fa5' },
+              ].map(s => (
+                <div key={s.label} className="text-right">
+                  <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1 }}>{s.value}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.3)', marginTop: '0.2rem' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
-      <div className="border-t border-white/5 mb-8" />
 
       {/* Input */}
-      <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-[#7aaa4a]/60 text-xs mb-3">● NOVA IDEIA DE FEATURE</div>
-        <div className="border-t border-white/5 mb-4" />
+      <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
+        <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>● Nova ideia de feature</div>
+        <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -142,16 +138,15 @@ export default function PM() {
           rows={3}
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-          <span className="mono text-white/20 text-xs">⌘+Enter para analisar</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter para analisar</span>
           <button
             onClick={handleAnalyze}
             disabled={loading || !input.trim()}
-            className="disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
-            style={{ background: '#7aaa4a' }}
+            style={{ background: '#7aaa4a', color: 'black', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: loading || !input.trim() ? 0.4 : 1 }}
           >
             {loading ? (
-              <span className="flex items-center gap-2">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
                 Analisando...
               </span>
@@ -161,18 +156,18 @@ export default function PM() {
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">
+        <div style={{ marginBottom: '1.5rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>
           {error}
         </div>
       )}
 
       {/* Kanban */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="mono text-white/25 text-xs">BACKLOG</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+        <span style={sectionLabel}>Backlog</span>
         {!fetching && features.length > 0 && (
           <button
             onClick={clearAll}
-            className="mono text-white/20 text-xs hover:text-white/45 border border-white/8 hover:border-white/15 px-2.5 py-1 rounded-lg transition-all"
+            style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}
           >
             limpar tudo
           </button>
@@ -181,82 +176,55 @@ export default function PM() {
 
       <div className="overflow-x-auto pb-2">
         <div className="grid grid-cols-4 gap-3" style={{ minWidth: 720 }}>
-          {COLS.map((col) => (
-            <div key={col.key} className="bg-[#141414] border border-white/5 rounded-xl p-4 min-h-[260px]">
-              {/* Col header */}
-              <div className="flex items-center justify-between mb-4">
-                <span className="mono text-[11px] font-semibold" style={{ color: col.color }}>
-                  {col.label}
-                </span>
-                <span
-                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full mono"
-                  style={{ color: col.color, background: `${col.color}18` }}
-                >
+          {COLS.map(col => (
+            <div key={col.key} style={{ ...card, padding: '1rem', minHeight: 260, borderLeft: `2px solid ${col.color}40` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 600, color: col.color }}>{col.label}</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, color: col.color, background: `${col.color}18`, padding: '0.1rem 0.45rem', borderRadius: 999 }}>
                   {byStatus(col.key).length}
                 </span>
               </div>
 
-              {/* Skeleton */}
               {fetching && col.key === 'ideia' && (
                 <div className="flex flex-col gap-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
-                      <Skel className="h-3 w-full mb-2" />
-                      <Skel className="h-2.5 w-2/3 mb-3" />
-                      <Skel className="h-5 w-14 rounded-full" />
+                  {[1,2].map(i => (
+                    <div key={i} style={{ ...innerCard, padding: '0.75rem' }}>
+                      <Skel className="h-3 w-full mb-2" /><Skel className="h-2.5 w-2/3 mb-3" /><Skel className="h-4 w-12 rounded-full" />
                     </div>
                   ))}
                 </div>
               )}
-              {fetching && col.key !== 'ideia' && (
-                <div className="text-white/10 text-xs text-center mt-10">—</div>
-              )}
 
-              {/* Cards */}
               {!fetching && (
                 <div className="flex flex-col gap-2">
                   {byStatus(col.key).length === 0 && (
-                    <div className="text-white/12 text-xs text-center mt-10">vazio</div>
+                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.12)', textAlign: 'center', marginTop: '2rem' }}>vazio</div>
                   )}
                   {byStatus(col.key).map(f => (
-                    <div
-                      key={f.id}
-                      className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 group hover:border-white/10 transition-colors"
-                    >
-                      <p className="text-white/80 text-xs font-medium leading-snug mb-1.5">
-                        {f.title}
-                      </p>
+                    <div key={f.id} style={{ ...innerCard, padding: '0.75rem' }} className="group hover:border-[#4a7fa5]/20 transition-colors">
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, lineHeight: 1.4, marginBottom: '0.4rem' }}>{f.title}</p>
                       {f.ice_reasoning && (
-                        <p className="text-white/28 text-[10px] leading-snug mb-2.5">
-                          {f.ice_reasoning}
-                        </p>
+                        <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.28)', lineHeight: 1.5, marginBottom: '0.6rem' }}>{f.ice_reasoning}</p>
                       )}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <IceBadge ice={f.ice} />
-                          {f.ice_impact && (
-                            <span className="text-[9px] text-white/20 mono">
-                              {f.ice_impact}/{f.ice_confidence}/{f.ice_ease}
-                            </span>
+                          {f.ice_impact > 0 && (
+                            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,.2)' }}>{f.ice_impact}/{f.ice_confidence}/{f.ice_ease}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <select
                             value={f.status}
                             onChange={e => moveStatus(f.id, e.target.value as Status)}
-                            className="bg-[#111] text-white/30 text-[10px] focus:outline-none cursor-pointer rounded px-1"
+                            style={{ background: 'rgba(11,21,32,.8)', color: 'rgba(255,255,255,.4)', fontSize: '0.62rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.25rem' }}
                           >
                             <option value="ideia">ideia</option>
                             <option value="aprovada">aprovada</option>
                             <option value="building">building</option>
                             <option value="done">done</option>
                           </select>
-                          <button
-                            onClick={() => deleteFeature(f.id)}
-                            className="text-white/15 hover:text-red-400 text-sm transition-colors leading-none px-1"
-                          >
-                            ×
-                          </button>
+                          <button onClick={() => deleteFeature(f.id)} style={{ color: 'rgba(255,255,255,.2)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }} className="hover:text-red-400 transition-colors">×</button>
                         </div>
                       </div>
                     </div>

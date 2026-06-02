@@ -9,40 +9,31 @@ const PROXY = (
 type Stage = 'prospect' | 'contato' | 'demo' | 'piloto' | 'cliente';
 
 interface Lead {
-  id: string;
-  name: string | null;
-  company: string;
-  stage: Stage;
-  notes: string | null;
-  follow_up_at: string | null;
-  mrr_est: number;
-  phone: string | null;
-  contact_email: string | null;
-  raw_input: string | null;
-  created_at: string;
+  id: string; name: string | null; company: string; stage: Stage;
+  notes: string | null; follow_up_at: string | null; mrr_est: number;
+  phone: string | null; contact_email: string | null; raw_input: string | null; created_at: string;
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: 'prospect', label: 'PROSPECT', color: '#9ca3af' },
-  { key: 'contato',  label: 'CONTATO',  color: '#60a5fa' },
-  { key: 'demo',     label: 'DEMO',     color: '#f59e0b' },
-  { key: 'piloto',   label: 'PILOTO',   color: '#a78bfa' },
-  { key: 'cliente',  label: 'CLIENTE',  color: '#7aaa4a' },
+  { key: 'prospect', label: 'Prospect', color: '#9ca3af' },
+  { key: 'contato',  label: 'Contato',  color: '#4a7fa5' },
+  { key: 'demo',     label: 'Demo',     color: '#f59e0b' },
+  { key: 'piloto',   label: 'Piloto',   color: '#a78bfa' },
+  { key: 'cliente',  label: 'Cliente',  color: '#7aaa4a' },
 ];
 
+const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
+const innerCard = { background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+const INPUT_CLS = 'w-full rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none transition-all placeholder-white/25 leading-relaxed';
+
 function Skel({ className }: { className?: string }) {
-  return <div className={`bg-white/5 rounded animate-pulse ${className ?? ''}`} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
 }
 
-const INPUT_CLS =
-  'w-full bg-[#1e1e1e] border border-white/8 rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none focus:border-white/25 focus:bg-[#232323] transition-all placeholder-white/20';
-
-// ── Painel de detalhes ────────────────────────────────────────────────────────
-function LeadPanel({
-  lead, onClose, onSave, onDelete,
-}: {
-  lead: Lead;
-  onClose: () => void;
+function LeadPanel({ lead, onClose, onSave, onDelete }: {
+  lead: Lead; onClose: () => void;
   onSave: (id: string, updates: Partial<Lead>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -76,141 +67,115 @@ function LeadPanel({
   }
 
   const stageColor = STAGES.find(s => s.key === form.stage)?.color ?? '#9ca3af';
+  const inputStyle = { background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', color: 'rgba(255,255,255,.85)' };
 
   return (
     <>
       <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-[1px]" onClick={onClose} />
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-[420px] bg-[#131313] border-l border-white/8 z-50 flex flex-col"
-        style={{ animation: 'slideIn 0.2s ease-out' }}
+        className="fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col"
+        style={{ background: '#111e30', borderLeft: '1px solid rgba(74,127,165,.15)', animation: 'slideIn 0.2s ease-out' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <span
-              className="mono text-[10px] font-semibold px-2 py-1 rounded-md"
-              style={{ color: stageColor, background: `${stageColor}18` }}
-            >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 4, color: stageColor, background: `${stageColor}18` }}>
               {form.stage?.toUpperCase()}
             </span>
-            <span className="text-white/30 text-xs">
+            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.3)' }}>
               {new Date(lead.created_at).toLocaleDateString('pt-BR')}
             </span>
           </div>
-          <button onClick={onClose} className="text-white/25 hover:text-white/70 transition-colors w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5">
-            ✕
-          </button>
+          <button onClick={onClose} style={{ color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }} className="hover:text-white/70 hover:bg-white/5 transition-all">✕</button>
         </div>
 
-        {/* Form */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 flex flex-col gap-4">
-          <div>
-            <label className="mono text-white/25 text-[10px] block mb-1.5">EMPRESA</label>
-            <input value={form.company ?? ''} onChange={e => set('company', e.target.value)} className={INPUT_CLS} placeholder="Nome da empresa" />
-          </div>
-          <div>
-            <label className="mono text-white/25 text-[10px] block mb-1.5">CONTATO</label>
-            <input value={form.name ?? ''} onChange={e => set('name', e.target.value || null)} className={INPUT_CLS} placeholder="Nome da pessoa" />
-          </div>
+        <div className="flex-1 overflow-y-auto" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {[
+            { key: 'company', label: 'Empresa', placeholder: 'Nome da empresa', type: 'text' },
+            { key: 'name',    label: 'Contato',  placeholder: 'Nome da pessoa',   type: 'text' },
+          ].map(f => (
+            <div key={f.key}>
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>{f.label}</label>
+              <input value={(form as Record<string, string | null>)[f.key] ?? ''} onChange={e => set(f.key as keyof Lead, e.target.value || null)} className={INPUT_CLS} style={inputStyle} placeholder={f.placeholder} />
+            </div>
+          ))}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mono text-white/25 text-[10px] block mb-1.5">TELEFONE</label>
-              <input value={form.phone ?? ''} onChange={e => set('phone', e.target.value || null)} className={INPUT_CLS} placeholder="(11) 99999-9999" />
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Telefone</label>
+              <input value={form.phone ?? ''} onChange={e => set('phone', e.target.value || null)} className={INPUT_CLS} style={inputStyle} placeholder="(11) 99999-9999" />
             </div>
             <div>
-              <label className="mono text-white/25 text-[10px] block mb-1.5">EMAIL</label>
-              <input type="email" value={form.contact_email ?? ''} onChange={e => set('contact_email', e.target.value || null)} className={INPUT_CLS} placeholder="contato@loja.com" />
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Email</label>
+              <input type="email" value={form.contact_email ?? ''} onChange={e => set('contact_email', e.target.value || null)} className={INPUT_CLS} style={inputStyle} placeholder="contato@loja.com" />
             </div>
           </div>
 
-          {/* Stage pills */}
           <div>
-            <label className="mono text-white/25 text-[10px] block mb-2">ESTÁGIO</label>
+            <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.6rem' }}>Estágio</label>
             <div className="flex gap-1.5 flex-wrap">
               {STAGES.map(s => (
-                <button
-                  key={s.key}
-                  onClick={() => set('stage', s.key)}
-                  className="mono text-[10px] px-2.5 py-1.5 rounded-lg transition-all"
-                  style={
-                    form.stage === s.key
-                      ? { color: s.color, background: `${s.color}22`, border: `1px solid ${s.color}50` }
-                      : { color: '#ffffff35', background: 'transparent', border: '1px solid #ffffff0e' }
-                  }
-                >
-                  {s.label}
-                </button>
+                <button key={s.key} onClick={() => set('stage', s.key)} style={
+                  form.stage === s.key
+                    ? { color: s.color, background: `${s.color}22`, border: `1px solid ${s.color}50`, fontSize: '0.68rem', padding: '0.3rem 0.7rem', borderRadius: 6, cursor: 'pointer' }
+                    : { color: 'rgba(255,255,255,.3)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', fontSize: '0.68rem', padding: '0.3rem 0.7rem', borderRadius: 6, cursor: 'pointer' }
+                }>{s.label}</button>
               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mono text-white/25 text-[10px] block mb-1.5">FOLLOW-UP</label>
-              <input type="date" value={form.follow_up_at ?? ''} onChange={e => set('follow_up_at', e.target.value || null)} className={INPUT_CLS} />
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Follow-up</label>
+              <input type="date" value={form.follow_up_at ?? ''} onChange={e => set('follow_up_at', e.target.value || null)} className={INPUT_CLS} style={inputStyle} />
             </div>
             <div>
-              <label className="mono text-white/25 text-[10px] block mb-1.5">MRR EST. (R$)</label>
-              <input type="number" value={form.mrr_est ?? 0} onChange={e => set('mrr_est', Number(e.target.value))} className={INPUT_CLS} placeholder="0" min={0} />
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>MRR Est. (R$)</label>
+              <input type="number" value={form.mrr_est ?? 0} onChange={e => set('mrr_est', Number(e.target.value))} className={INPUT_CLS} style={inputStyle} placeholder="0" min={0} />
             </div>
           </div>
 
           <div>
-            <label className="mono text-white/25 text-[10px] block mb-1.5">OBSERVAÇÕES</label>
-            <textarea
-              value={form.notes ?? ''}
-              onChange={e => set('notes', e.target.value || null)}
-              rows={4}
-              className={`${INPUT_CLS} resize-none`}
-              placeholder="Contexto, histórico, próximos passos..."
-            />
+            <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Observações</label>
+            <textarea value={form.notes ?? ''} onChange={e => set('notes', e.target.value || null)} rows={4} className={`${INPUT_CLS} resize-none`} style={inputStyle} placeholder="Contexto, histórico, próximos passos..." />
           </div>
 
           {lead.raw_input && (
             <div>
-              <label className="mono text-white/25 text-[10px] block mb-1.5">ENTRADA ORIGINAL</label>
-              <p className="text-white/20 text-xs leading-relaxed bg-[#1a1a1a] border border-white/5 rounded-lg px-3 py-2.5">
+              <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Entrada original</label>
+              <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.2)', lineHeight: 1.6, background: 'rgba(11,21,32,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6, padding: '0.6rem 0.75rem' }}>
                 {lead.raw_input}
               </p>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/5 flex items-center justify-between">
-          <button onClick={handleDelete} disabled={deleting} className="text-red-400/50 hover:text-red-400 text-xs transition-colors disabled:opacity-40">
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid rgba(74,127,165,.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button onClick={handleDelete} disabled={deleting} style={{ fontSize: '0.72rem', color: 'rgba(239,68,68,.5)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors disabled:opacity-40">
             {deleting ? 'Removendo...' : 'Remover lead'}
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving || !dirty}
-            className="bg-[#f59e0b] hover:bg-[#fbbf24] disabled:opacity-40 text-black text-xs font-semibold px-5 py-2 rounded-lg transition-colors"
-          >
+          <button onClick={handleSave} disabled={saving || !dirty}
+            style={{ background: '#f59e0b', color: 'black', fontSize: '0.75rem', fontWeight: 700, padding: '0.5rem 1.25rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: saving || !dirty ? 0.4 : 1 }}>
             {saving ? 'Salvando...' : dirty ? 'Salvar →' : 'Salvo ✓'}
           </button>
         </div>
       </div>
-      <style>{`
-        @keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }
-      `}</style>
+      <style>{`@keyframes slideIn { from { transform: translateX(100%); opacity:0; } to { transform: translateX(0); opacity:1; } }`}</style>
     </>
   );
 }
 
-// ── Pipeline principal ────────────────────────────────────────────────────────
 export default function Pipeline() {
   const { token } = useAuth();
-  const [input, setInput]     = useState('');
-  const [leads, setLeads]     = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [input, setInput]       = useState('');
+  const [leads, setLeads]       = useState<Lead[]>([]);
+  const [loading, setLoading]   = useState(false);
   const [fetching, setFetching] = useState(true);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-
-  const byStage  = (s: Stage) => leads.filter(l => l.stage === s);
-  const totalMrr = leads.filter(l => l.stage === 'cliente').reduce((a, l) => a + (l.mrr_est ?? 0), 0);
+  const byStage   = (s: Stage) => leads.filter(l => l.stage === s);
+  const totalMrr  = leads.filter(l => l.stage === 'cliente').reduce((a, l) => a + (l.mrr_est ?? 0), 0);
   const followUps = leads.filter(l => l.follow_up_at).length;
 
   const fetchLeads = useCallback(async () => {
@@ -222,7 +187,8 @@ export default function Pipeline() {
       setLeads(data ?? []);
     } catch (err) { console.error('[pipeline]', err); }
     finally { setFetching(false); }
-  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
 
@@ -258,30 +224,36 @@ export default function Pipeline() {
     setSelectedLead(null);
   }
 
+  const STATS = [
+    { label: 'Leads',      value: leads.length,              color: 'white' },
+    { label: 'Clientes',   value: byStage('cliente').length, color: '#7aaa4a' },
+    { label: 'Follow-ups', value: followUps,                 color: '#f59e0b' },
+    { label: 'MRR Est.',   value: `R$${totalMrr.toLocaleString('pt-BR')}`, color: '#7aaec7' },
+  ];
+
   return (
-    <div className="p-10">
+    <div className="p-8">
       {/* Header */}
-      <div className="mb-3">
-        <h1 className="text-2xl font-bold text-white mb-1">Pipeline Comercial</h1>
-        <p className="mono text-white/30 text-sm">CRM em linguagem natural</p>
+      <div className="mb-8">
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+          Pipeline Comercial
+        </h1>
+        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+          CRM em linguagem natural
+        </p>
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
-      <div className="border-t border-white/5 mb-8" />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-8">
-        {[
-          { label: 'LEADS',      value: leads.length,                                    color: '#e5e5e5' },
-          { label: 'CLIENTES',   value: byStage('cliente').length,                       color: '#7aaa4a' },
-          { label: 'FOLLOW-UPS', value: followUps,                                       color: '#f59e0b' },
-          { label: 'MRR EST.',   value: `R$${totalMrr.toLocaleString('pt-BR')}`,        color: '#34d399' },
-        ].map(s => (
-          <div key={s.label} className="bg-[#141414] border border-white/5 rounded-xl p-4">
+        {STATS.map(s => (
+          <div key={s.label} style={{ ...card, padding: '1rem 1.1rem', borderLeft: `3px solid ${s.color}40` }}>
             {fetching ? (
               <><Skel className="h-6 w-8 mb-2" /><Skel className="h-2.5 w-16" /></>
             ) : (
               <>
-                <div className="text-xl font-bold mb-1" style={{ color: s.color }}>{s.value}</div>
-                <div className="mono text-white/28 text-[10px]">{s.label}</div>
+                <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1, marginBottom: '0.3rem' }}>{s.value}</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.3)' }}>{s.label}</div>
               </>
             )}
           </div>
@@ -289,9 +261,9 @@ export default function Pipeline() {
       </div>
 
       {/* Input */}
-      <div className="bg-[#141414] border border-white/5 rounded-xl p-5 mb-8">
-        <div className="mono text-[#f59e0b]/60 text-xs mb-3">● NOVO LEAD OU ATUALIZAÇÃO</div>
-        <div className="border-t border-white/5 mb-4" />
+      <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
+        <div style={{ ...sectionLabel, color: 'rgba(245,158,11,.7)', marginBottom: '0.85rem' }}>● Novo lead ou atualização</div>
+        <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -300,15 +272,15 @@ export default function Pipeline() {
           rows={3}
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
-        <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5">
-          <span className="text-white/20 text-xs">⌘+Enter · Claude estrutura automaticamente</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter · Claude estrutura automaticamente</span>
           <button
             onClick={handleAdd}
             disabled={loading || !input.trim()}
-            className="bg-[#f59e0b] hover:bg-[#fbbf24] disabled:opacity-40 text-black text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
+            style={{ background: '#f59e0b', color: 'black', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: loading || !input.trim() ? 0.4 : 1 }}
           >
             {loading ? (
-              <span className="flex items-center gap-2">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span className="w-3 h-3 border border-black/30 border-t-black/80 rounded-full animate-spin" />
                 Processando...
               </span>
@@ -317,66 +289,49 @@ export default function Pipeline() {
         </div>
       </div>
 
-      {/* Kanban — overflow horizontal em telas pequenas */}
-      <div className="mono text-white/25 text-xs mb-3">PIPELINE</div>
+      {/* Kanban */}
+      <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>Pipeline</div>
       <div className="overflow-x-auto pb-2">
         <div className="grid grid-cols-5 gap-3" style={{ minWidth: 800 }}>
           {STAGES.map(col => (
-            <div key={col.key} className="bg-[#141414] border border-white/5 rounded-xl p-3 min-h-[240px]">
-              {/* Col header */}
-              <div className="flex items-center justify-between mb-3">
-                <span className="mono text-[10px] font-semibold" style={{ color: col.color }}>
-                  {col.label}
-                </span>
-                <span
-                  className="text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full mono"
-                  style={{ color: col.color, background: `${col.color}18` }}
-                >
+            <div key={col.key} style={{ ...card, padding: '0.85rem', minHeight: 240, borderTop: `2px solid ${col.color}30` }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 600, color: col.color }}>{col.label}</span>
+                <span style={{ fontSize: '0.62rem', fontWeight: 700, color: col.color, background: `${col.color}18`, width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 999 }}>
                   {byStage(col.key).length}
                 </span>
               </div>
 
-              {/* Skeleton */}
               {fetching && (
                 <div className="flex flex-col gap-2">
                   {col.key === 'prospect' && [1,2].map(i => (
-                    <div key={i} className="bg-[#1a1a1a] rounded-lg p-3 border border-white/5">
-                      <Skel className="h-3 w-full mb-2" />
-                      <Skel className="h-2 w-2/3 mb-2" />
-                      <Skel className="h-2 w-1/2" />
+                    <div key={i} style={{ ...innerCard, padding: '0.65rem' }}>
+                      <Skel className="h-3 w-full mb-2" /><Skel className="h-2 w-2/3 mb-2" /><Skel className="h-2 w-1/2" />
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Cards */}
               {!fetching && (
                 <div className="flex flex-col gap-2">
                   {byStage(col.key).length === 0 && (
-                    <div className="text-white/10 text-xs text-center mt-10">vazio</div>
+                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.1)', textAlign: 'center', marginTop: '1.5rem' }}>vazio</div>
                   )}
                   {byStage(col.key).map(l => (
                     <div
                       key={l.id}
                       onClick={() => setSelectedLead(l)}
-                      className="bg-[#1a1a1a] border border-white/5 rounded-lg p-3 cursor-pointer hover:border-white/15 hover:bg-[#1e1e1e] transition-all"
+                      style={{ ...innerCard, padding: '0.65rem', cursor: 'pointer' }}
+                      className="hover:border-[#4a7fa5]/20 hover:bg-[#1e3350]/30 transition-all"
                     >
-                      <div className="text-white/80 text-xs font-medium leading-snug mb-0.5">{l.company}</div>
-                      {l.name && <div className="text-white/30 text-[10px] mb-1.5">{l.name}</div>}
-                      {l.notes && (
-                        <div className="text-white/22 text-[10px] leading-snug line-clamp-2 mb-2">{l.notes}</div>
-                      )}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {l.follow_up_at && (
-                          <span className="mono text-[#f59e0b]/55 text-[9px]">
-                            📅 {new Date(l.follow_up_at + 'T00:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })}
-                          </span>
-                        )}
-                        {l.mrr_est > 0 && (
-                          <span className="mono text-[#7aaa4a]/55 text-[9px]">R${l.mrr_est.toLocaleString('pt-BR')}</span>
-                        )}
-                        {l.phone && <span className="text-[9px] opacity-30">📞</span>}
-                        {l.contact_email && <span className="text-[9px] opacity-30">✉️</span>}
+                      <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, lineHeight: 1.3, marginBottom: '0.2rem' }}>{l.company}</div>
+                      {l.name && <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.3)', marginBottom: '0.4rem' }}>{l.name}</div>}
+                      {l.notes && <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.22)', lineHeight: 1.4, marginBottom: '0.4rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.notes}</div>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        {l.follow_up_at && <span style={{ fontSize: '0.58rem', color: 'rgba(245,158,11,.55)' }}>📅 {new Date(l.follow_up_at + 'T00:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })}</span>}
+                        {l.mrr_est > 0 && <span style={{ fontSize: '0.58rem', color: 'rgba(122,170,74,.55)' }}>R${l.mrr_est.toLocaleString('pt-BR')}</span>}
+                        {l.phone && <span style={{ fontSize: '0.58rem', opacity: 0.3 }}>📞</span>}
+                        {l.contact_email && <span style={{ fontSize: '0.58rem', opacity: 0.3 }}>✉️</span>}
                       </div>
                     </div>
                   ))}
@@ -388,12 +343,7 @@ export default function Pipeline() {
       </div>
 
       {selectedLead && (
-        <LeadPanel
-          lead={selectedLead}
-          onClose={() => setSelectedLead(null)}
-          onSave={handleSave}
-          onDelete={handleDelete}
-        />
+        <LeadPanel lead={selectedLead} onClose={() => setSelectedLead(null)} onSave={handleSave} onDelete={handleDelete} />
       )}
     </div>
   );

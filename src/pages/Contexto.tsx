@@ -17,37 +17,41 @@ const DNA_SECTIONS = [
   { key: 'fundador',     header: '## Fundador',            label: 'Fundador',           hint: 'Perfil, estilo de trabalho',   rows: 2 },
 ];
 
+const AGENT_CHIPS = [
+  { label: 'PM',       color: '#7aaa4a' },
+  { label: 'Builder',  color: '#4a7fa5' },
+  { label: 'Pipeline', color: '#f59e0b' },
+  { label: 'Carteira', color: '#7aaec7' },
+  { label: 'Conteúdo', color: '#a78bfa' },
+];
+
 function parseDNA(dna: string): Record<string, string> {
   const result: Record<string, string> = {};
   for (let i = 0; i < DNA_SECTIONS.length; i++) {
-    const s = DNA_SECTIONS[i];
-    const next = DNA_SECTIONS[i + 1];
+    const s = DNA_SECTIONS[i], next = DNA_SECTIONS[i + 1];
     const start = dna.indexOf(s.header);
     if (start === -1) { result[s.key] = ''; continue; }
-    const contentStart = start + s.header.length;
     const end = next ? dna.indexOf(next.header) : dna.length;
-    result[s.key] = dna.slice(contentStart, end === -1 ? dna.length : end).trim();
+    result[s.key] = dna.slice(start + s.header.length, end === -1 ? dna.length : end).trim();
   }
   return result;
 }
 
 function assembleDNA(sections: Record<string, string>): string {
-  return DNA_SECTIONS
-    .map(s => `${s.header}\n${sections[s.key] || ''}`)
-    .join('\n\n');
+  return DNA_SECTIONS.map(s => `${s.header}\n${sections[s.key] || ''}`).join('\n\n');
 }
 
-const INPUT_CLS =
-  'w-full bg-[#1a1a1a] border border-white/6 rounded-lg px-3 py-2.5 text-white/75 text-sm font-mono leading-relaxed resize-none focus:outline-none focus:border-white/20 focus:bg-[#1e1e1e] transition-all placeholder-white/18';
+const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 
 export default function Contexto() {
   const { token } = useAuth();
   const [sections, setSections] = useState<Record<string, string>>({});
   const [original, setOriginal] = useState<Record<string, string>>({});
-  const [loading,  setLoading]  = useState(true);
-  const [saving,   setSaving]   = useState(false);
-  const [saved,    setSaved]    = useState(false);
-  const [error,    setError]    = useState<string | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [saved, setSaved]       = useState(false);
+  const [error, setError]       = useState<string | null>(null);
 
   const authHeaders = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
   const dirty = JSON.stringify(sections) !== JSON.stringify(original);
@@ -58,8 +62,7 @@ export default function Contexto() {
       .then(data => {
         if (data.dna) {
           const parsed = parseDNA(data.dna);
-          setSections(parsed);
-          setOriginal(parsed);
+          setSections(parsed); setOriginal(parsed);
         }
       })
       .catch(e => setError(e.message))
@@ -67,57 +70,53 @@ export default function Contexto() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function updateSection(key: string, value: string) {
-    setSections(prev => ({ ...prev, [key]: value }));
-  }
-
   async function handleSave() {
     if (!dirty || saving) return;
-    setSaving(true);
-    setError(null);
+    setSaving(true); setError(null);
     try {
-      const dna = assembleDNA(sections);
       const r = await fetch(`${PROXY}/api/hq/config`, {
-        method: 'PUT', headers: authHeaders, body: JSON.stringify({ dna }),
+        method: 'PUT', headers: authHeaders, body: JSON.stringify({ dna: assembleDNA(sections) }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro ao salvar');
       setOriginal({ ...sections });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar');
-    } finally {
-      setSaving(false);
-    }
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : 'Erro ao salvar'); }
+    finally { setSaving(false); }
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', background: 'rgba(17,30,48,.6)', border: '1px solid rgba(74,127,165,.12)',
+    borderRadius: 6, padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,.75)',
+    fontSize: '0.82rem', fontFamily: 'monospace', lineHeight: 1.6, resize: 'none',
+    outline: 'none', transition: 'border-color .15s',
+  };
+
   return (
-    <div className="p-10 max-w-2xl">
+    <div className="p-8 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Contexto da Reveny</h1>
-        <p className="mono text-white/30 text-sm">DNA injetado em todos os agentes</p>
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+          Contexto da Reveny
+        </h1>
+        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+          DNA injetado em todos os agentes
+        </p>
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
 
-      {/* Agentes que usam */}
-      <div className="flex items-center gap-2 mb-8 flex-wrap">
-        {[
-          { label: 'PM', color: '#7aaa4a' },
-          { label: 'Builder', color: '#60a5fa' },
-          { label: 'Pipeline', color: '#f59e0b' },
-          { label: 'Carteira', color: '#34d399' },
-          { label: 'Conteúdo', color: '#a78bfa' },
-        ].map(a => (
-          <span
-            key={a.label}
-            className="mono text-[10px] px-2.5 py-1 rounded-full"
-            style={{ color: a.color, background: `${a.color}18`, border: `1px solid ${a.color}30` }}
-          >
-            {a.label}
-          </span>
+      {/* Agent chips */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: '2rem' }}>
+        {AGENT_CHIPS.map(a => (
+          <span key={a.label} style={{
+            fontSize: '0.68rem', fontWeight: 500, padding: '0.25rem 0.75rem', borderRadius: 999,
+            color: a.color, background: `${a.color}18`, border: `1px solid ${a.color}30`,
+          }}>{a.label}</span>
         ))}
-        <span className="text-white/20 text-xs ml-1">recebem este contexto a cada chamada</span>
+        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.2)', marginLeft: 4 }}>
+          recebem este contexto a cada chamada
+        </span>
       </div>
 
       {/* Sections */}
@@ -125,8 +124,8 @@ export default function Contexto() {
         <div className="flex flex-col gap-5">
           {DNA_SECTIONS.map(s => (
             <div key={s.key}>
-              <div className="h-3 w-32 bg-white/5 rounded animate-pulse mb-2" />
-              <div className="h-20 bg-white/5 rounded-lg animate-pulse" />
+              <div style={{ height: 12, width: 128, background: 'rgba(74,127,165,.08)', borderRadius: 4, marginBottom: 8, animation: 'pulse 1.5s infinite' }} />
+              <div style={{ height: 80, background: 'rgba(74,127,165,.08)', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
             </div>
           ))}
         </div>
@@ -134,20 +133,22 @@ export default function Contexto() {
         <div className="flex flex-col gap-5">
           {DNA_SECTIONS.map(s => (
             <div key={s.key}>
-              <div className="flex items-center gap-2 mb-1.5">
-                <label className="text-white/60 text-xs font-medium">{s.label}</label>
-                <span className="text-white/20 text-xs">{s.hint}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem' }}>
+                <label style={{ fontSize: '0.78rem', fontWeight: 500, color: 'rgba(255,255,255,.6)' }}>{s.label}</label>
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>{s.hint}</span>
                 {sections[s.key] !== original[s.key] && (
-                  <span className="mono text-amber-400/60 text-[10px] ml-auto">● editado</span>
+                  <span style={{ fontSize: '0.62rem', color: 'rgba(251,191,36,.6)', marginLeft: 'auto' }}>● editado</span>
                 )}
               </div>
               <textarea
                 value={sections[s.key] ?? ''}
-                onChange={e => updateSection(s.key, e.target.value)}
+                onChange={e => setSections(prev => ({ ...prev, [s.key]: e.target.value }))}
                 rows={s.rows}
                 spellCheck={false}
-                className={INPUT_CLS}
+                style={inputStyle}
                 placeholder={`${s.label}...`}
+                onFocus={e => (e.target.style.borderColor = 'rgba(74,127,165,.35)')}
+                onBlur={e => (e.target.style.borderColor = 'rgba(74,127,165,.12)')}
               />
             </div>
           ))}
@@ -155,16 +156,23 @@ export default function Contexto() {
       )}
 
       {error && (
-        <div className="mt-5 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-red-400 text-sm">{error}</div>
+        <div style={{ marginTop: '1.25rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>{error}</div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-6 pt-5 border-t border-white/5">
-        <p className="text-white/18 text-xs">Alterações entram em vigor na próxima chamada de qualquer agente.</p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
+        <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.18)', maxWidth: 280, lineHeight: 1.5 }}>
+          Alterações entram em vigor na próxima chamada de qualquer agente.
+        </p>
         <button
           onClick={handleSave}
           disabled={!dirty || saving}
-          className="bg-white hover:bg-white/90 disabled:opacity-25 text-black text-xs font-semibold px-5 py-2 rounded-lg transition-colors"
+          style={{
+            background: dirty && !saving ? '#4a7fa5' : 'rgba(74,127,165,.2)',
+            color: dirty && !saving ? 'white' : 'rgba(255,255,255,.3)',
+            fontSize: '0.78rem', fontWeight: 600, padding: '0.55rem 1.25rem',
+            borderRadius: 6, border: 'none', cursor: dirty && !saving ? 'pointer' : 'not-allowed', transition: 'all .15s',
+          }}
         >
           {saving ? 'Salvando...' : saved ? '✓ Salvo' : 'Salvar →'}
         </button>
