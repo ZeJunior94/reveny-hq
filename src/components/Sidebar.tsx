@@ -17,7 +17,7 @@ const NAV_CONFIG = [
   { path: '/contexto', label: 'Contexto', icon: BookOpen, color: '#7aaec7' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const { logout, user } = useAuth();
 
   const initials = user?.email
@@ -28,6 +28,10 @@ export default function Sidebar() {
     ? user.email.length > 22 ? user.email.slice(0, 20) + '…' : user.email
     : '';
 
+  function handleNav() {
+    onClose?.();
+  }
+
   return (
     <aside
       style={{
@@ -35,7 +39,7 @@ export default function Sidebar() {
         background: '#0f1c2e',
         borderRight: '1px solid rgba(74,127,165,.1)',
         display: 'flex', flexDirection: 'column',
-        minHeight: '100vh',
+        minHeight: '100vh', height: '100%',
       }}
     >
       {/* ── Logo ── */}
@@ -46,11 +50,8 @@ export default function Sidebar() {
       }}>
         <span style={{
           fontFamily: "'Plus Jakarta Sans', sans-serif",
-          fontWeight: 800,
-          fontSize: '1.15rem',
-          letterSpacing: '-0.04em',
-          color: 'white',
-          lineHeight: 1,
+          fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.04em',
+          color: 'white', lineHeight: 1,
         }}>
           Rev<span style={{ color: '#7aaec7' }}>e</span>ny
           <span style={{ color: '#4a7fa5', fontWeight: 500, fontSize: '0.7rem', letterSpacing: '0.06em', marginLeft: 5 }}>HQ</span>
@@ -64,33 +65,20 @@ export default function Sidebar() {
             key={item.path}
             to={item.path}
             end={item.path === '/'}
+            onClick={handleNav}
           >
             {({ isActive }) => (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 9,
-                padding: '0.5rem 0.75rem',
-                borderRadius: 7,
+                padding: '0.5rem 0.75rem', borderRadius: 7,
                 borderLeft: isActive ? `2px solid ${item.color}` : '2px solid transparent',
                 background: isActive ? 'rgba(74,127,165,.1)' : 'transparent',
-                cursor: 'pointer',
-                transition: 'all .15s',
+                cursor: 'pointer', transition: 'all .15s',
               }}
               className={!isActive ? 'hover:bg-white/5' : ''}
               >
-                <item.icon
-                  size={14}
-                  style={{
-                    color: isActive ? item.color : 'rgba(255,255,255,0.22)',
-                    flexShrink: 0,
-                    transition: 'color .15s',
-                  }}
-                />
-                <span style={{
-                  fontSize: '0.8rem',
-                  fontWeight: isActive ? 500 : 400,
-                  color: isActive ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.4)',
-                  transition: 'color .15s',
-                }}>
+                <item.icon size={14} style={{ color: isActive ? item.color : 'rgba(255,255,255,0.22)', flexShrink: 0, transition: 'color .15s' }} />
+                <span style={{ fontSize: '0.8rem', fontWeight: isActive ? 500 : 400, color: isActive ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.4)', transition: 'color .15s' }}>
                   {item.label}
                 </span>
               </div>
@@ -98,35 +86,22 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {/* ── Separador ── */}
         <div style={{ margin: '0.75rem 0.25rem', borderTop: '1px solid rgba(74,127,165,.08)' }} />
 
-        {/* ── Config ── */}
         {NAV_CONFIG.map((item) => (
-          <NavLink key={item.path} to={item.path}>
+          <NavLink key={item.path} to={item.path} onClick={handleNav}>
             {({ isActive }) => (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 9,
-                padding: '0.45rem 0.75rem',
-                borderRadius: 7,
+                padding: '0.45rem 0.75rem', borderRadius: 7,
                 borderLeft: isActive ? `2px solid ${item.color}` : '2px solid transparent',
                 background: isActive ? 'rgba(74,127,165,.08)' : 'transparent',
-                cursor: 'pointer',
-                transition: 'all .15s',
+                cursor: 'pointer', transition: 'all .15s',
               }}
               className={!isActive ? 'hover:bg-white/5' : ''}
               >
-                <item.icon
-                  size={13}
-                  style={{
-                    color: isActive ? item.color : 'rgba(255,255,255,.18)',
-                    flexShrink: 0,
-                  }}
-                />
-                <span style={{
-                  fontSize: '0.75rem',
-                  color: isActive ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.28)',
-                }}>
+                <item.icon size={13} style={{ color: isActive ? item.color : 'rgba(255,255,255,.18)', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.75rem', color: isActive ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.28)' }}>
                   {item.label}
                 </span>
               </div>
@@ -136,49 +111,25 @@ export default function Sidebar() {
       </nav>
 
       {/* ── User + Logout ── */}
-      <div style={{
-        padding: '0.85rem 0.85rem',
-        borderTop: '1px solid rgba(74,127,165,.08)',
-      }}>
+      <div style={{ padding: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 9,
-          padding: '0.6rem 0.65rem',
-          borderRadius: 8,
-          background: 'rgba(74,127,165,.06)',
-          border: '1px solid rgba(74,127,165,.1)',
+          padding: '0.6rem 0.65rem', borderRadius: 8,
+          background: 'rgba(74,127,165,.06)', border: '1px solid rgba(74,127,165,.1)',
         }}>
-          {/* Avatar */}
           <div style={{
             width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
             background: 'linear-gradient(135deg, #1e3350, #4a7fa5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: '0.6rem', fontWeight: 800, color: 'rgba(255,255,255,.85)',
-            letterSpacing: '0.02em',
           }}>
             {initials}
           </div>
-
-          {/* Email */}
-          <span style={{
-            flex: 1, fontSize: '0.68rem', color: 'rgba(255,255,255,.35)',
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
+          <span style={{ flex: 1, fontSize: '0.68rem', color: 'rgba(255,255,255,.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {emailShort}
           </span>
-
-          {/* Logout */}
-          <button
-            onClick={logout}
-            title="Sair"
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'rgba(255,255,255,.2)', padding: 4, borderRadius: 5,
-              display: 'flex', alignItems: 'center', flexShrink: 0,
-              transition: 'color .15s',
-            }}
-            className="hover:text-white/55"
-          >
+          <button onClick={logout} title="Sair" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.2)', padding: 4, borderRadius: 5, display: 'flex', alignItems: 'center', flexShrink: 0 }} className="hover:text-white/55">
             <LogOut size={13} />
           </button>
         </div>

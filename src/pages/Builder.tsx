@@ -83,7 +83,7 @@ export default function Builder() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 md:p-8 max-w-5xl">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
@@ -164,7 +164,7 @@ export default function Builder() {
       </div>
 
       {fetching ? (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
           {[1,2,3].map(i => (
             <div key={i} style={{ ...card, padding: '1rem' }}>
               <Skel className="h-3 w-full mb-2" /><Skel className="h-3 w-3/4 mb-4" /><Skel className="h-2.5 w-16" />
@@ -174,7 +174,7 @@ export default function Builder() {
       ) : prds.length === 0 ? (
         <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.18)', marginBottom: '1.5rem' }}>Nenhum PRD gerado ainda.</div>
       ) : (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
           {prds.map(p => (
             <button
               key={p.id}

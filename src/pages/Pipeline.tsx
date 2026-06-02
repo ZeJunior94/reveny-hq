@@ -74,7 +74,7 @@ function LeadPanel({ lead, onClose, onSave, onDelete }: {
       <div className="fixed inset-0 bg-black/60 z-40 backdrop-blur-[1px]" onClick={onClose} />
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-[420px] z-50 flex flex-col"
+        className="fixed top-0 right-0 h-full w-full sm:w-[420px] z-50 flex flex-col"
         style={{ background: '#111e30', borderLeft: '1px solid rgba(74,127,165,.15)', animation: 'slideIn 0.2s ease-out' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }}>
@@ -232,7 +232,7 @@ export default function Pipeline() {
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
@@ -245,7 +245,7 @@ export default function Pipeline() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 md:mb-8">
         {STATS.map(s => (
           <div key={s.label} style={{ ...card, padding: '1rem 1.1rem', borderLeft: `3px solid ${s.color}40` }}>
             {fetching ? (

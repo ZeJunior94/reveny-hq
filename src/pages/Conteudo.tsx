@@ -104,7 +104,7 @@ export default function Conteudo() {
   const postsByPlatform = (p: Platform) => posts.filter(x => x.platform === p).length;
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 md:p-8 max-w-5xl">
       {/* Header */}
       <div className="mb-8">
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
@@ -127,7 +127,7 @@ export default function Conteudo() {
         <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
       </div>
 
-      <div className="grid grid-cols-[1fr_1.2fr] gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-4 md:gap-6">
         {/* Left */}
         <div className="min-w-0">
           {/* Input */}

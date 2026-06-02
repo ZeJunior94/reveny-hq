@@ -15,7 +15,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0b1520] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-white/10 border-t-[#7aaa4a] rounded-full animate-spin" />
       </div>
     );
@@ -29,7 +29,7 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+      <div className="min-h-screen bg-[#0b1520] flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-white/10 border-t-[#7aaa4a] rounded-full animate-spin" />
       </div>
     );

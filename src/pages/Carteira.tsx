@@ -55,7 +55,7 @@ export default function Carteira() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 md:p-8 max-w-3xl">
       {/* Header */}
       <div className="mb-8">
         <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
@@ -69,7 +69,7 @@ export default function Carteira() {
 
       {/* Stats strip */}
       {resumo && (
-        <div className="grid grid-cols-5 gap-2 mb-6">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-6">
           {[
             { label: 'Total',      value: resumo.totalClientes, color: 'white' },
             { label: 'Ativos',     value: resumo.ativos,        color: '#7aaa4a' },

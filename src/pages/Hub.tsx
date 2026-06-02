@@ -136,10 +136,10 @@ export default function Hub() {
   ];
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 md:p-8 max-w-5xl">
 
       {/* ── Stats strip ── */}
-      <div className="grid grid-cols-4 gap-3 mb-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 md:mb-10">
         {STATS.map((stat) => (
           <div
             key={stat.label}
@@ -179,7 +179,7 @@ export default function Hub() {
         Agentes
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8 md:mb-10">
         {AGENTS.map((a) => (
           <button
             key={a.path}
