@@ -42,7 +42,6 @@ function assembleDNA(sections: Record<string, string>): string {
 }
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 
 export default function Contexto() {
   const { token } = useAuth();
