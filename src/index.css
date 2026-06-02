@@ -1,5 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,700;0,800;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
 @import "tailwindcss";
+
+:root {
+  --deep:  #0b1520;
+  --dark:  #111e30;
+  --mid:   #1e3350;
+  --steel: #4a7fa5;
+  --ice:   #7aaec7;
+  --green: #7aaa4a;
+  --muted: #5a7a90;
+}
 
 * {
   box-sizing: border-box;
@@ -8,7 +18,7 @@
 }
 
 body {
-  background: #0d0d0d;
+  background: #0b1520;
   color: #e5e5e5;
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -21,11 +31,15 @@ body {
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(74,127,165,.25); border-radius: 2px; }
 
 .mono {
   font-family: 'Courier New', monospace;
   font-size: 0.68rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.jakarta {
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
