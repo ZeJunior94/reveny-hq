@@ -44,11 +44,17 @@ export default function Sidebar() {
         borderBottom: '1px solid rgba(74,127,165,.08)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <img
-          src="/logo.svg"
-          alt="Reveny"
-          style={{ height: 30, width: 'auto', objectFit: 'contain' }}
-        />
+        <span style={{
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontWeight: 800,
+          fontSize: '1.15rem',
+          letterSpacing: '-0.04em',
+          color: 'white',
+          lineHeight: 1,
+        }}>
+          Rev<span style={{ color: '#7aaec7' }}>e</span>ny
+          <span style={{ color: '#4a7fa5', fontWeight: 500, fontSize: '0.7rem', letterSpacing: '0.06em', marginLeft: 5 }}>HQ</span>
+        </span>
       </div>
 
       {/* ── Nav principal ── */}
