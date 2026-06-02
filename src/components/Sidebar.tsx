@@ -45,9 +45,9 @@ export default function Sidebar() {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <img
-          src="/logo.png"
+          src="/logo.svg"
           alt="Reveny"
-          style={{ height: 36, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.9 }}
+          style={{ height: 30, width: 'auto', objectFit: 'contain' }}
         />
       </div>
 
