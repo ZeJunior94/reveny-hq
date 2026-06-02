@@ -138,17 +138,6 @@ export default function Hub() {
   return (
     <div className="p-8 max-w-5xl">
 
-      {/* ── Header ── */}
-      <div className="mb-8">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.9rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
-          Rev<span style={{ color: '#7aaec7' }}>e</span>ny HQ
-        </h1>
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.35rem', letterSpacing: '0.02em' }}>
-          Seu workspace de agentes
-        </p>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
-      </div>
-
       {/* ── Stats strip ── */}
       <div className="grid grid-cols-4 gap-3 mb-10">
         {STATS.map((stat) => (

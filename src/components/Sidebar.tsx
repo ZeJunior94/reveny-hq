@@ -47,7 +47,7 @@ export default function Sidebar() {
         <img
           src="/logo.png"
           alt="Reveny"
-          style={{ height: 28, width: 'auto', objectFit: 'contain', filter: 'brightness(1)' }}
+          style={{ height: 22, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.9 }}
         />
       </div>
 
