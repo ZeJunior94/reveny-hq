@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { signOut, getUser } from '@/lib/supabase';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-export const ADMINS = ['juniormarquess1994@gmail.com'];
+export const ADMINS = ['juniormarquess1994@gmail.com', 'lucas.brum@reveny.com.br'];
 
 interface AuthUser {
   id: string;
