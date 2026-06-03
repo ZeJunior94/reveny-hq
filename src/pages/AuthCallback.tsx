@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUser } from '@/lib/supabase';
-import { useAuth, ADMINS } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
+
+const PROXY = (
+  (import.meta.env.VITE_PROXY_BASE as string | undefined)
+  || 'https://mailflow-seu-email-inteligente-production.up.railway.app'
+).trim();
 
 export default function AuthCallback() {
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
   const { setSession } = useAuth();
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Supabase retorna os tokens no hash da URL após OAuth
-    const hash = window.location.hash.substring(1);
+    const hash   = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
     const accessToken = params.get('access_token');
 
@@ -20,15 +24,23 @@ export default function AuthCallback() {
     }
 
     getUser(accessToken)
-      .then((u) => {
+      .then(async (u) => {
         if (!u?.email) {
           setError('Não foi possível verificar o usuário.');
           return;
         }
-        if (!ADMINS.includes(u.email)) {
+
+        // Verifica acesso na tabela hq_admins (fonte única de verdade)
+        const checkRes = await fetch(
+          `${PROXY}/api/hq/admins/check?email=${encodeURIComponent(u.email)}`
+        );
+        const { allowed } = checkRes.ok ? await checkRes.json() : { allowed: false };
+
+        if (!allowed) {
           setError('Acesso restrito à equipe Reveny.');
           return;
         }
+
         setSession(accessToken, { id: u.id, email: u.email, isAdmin: true });
         navigate('/', { replace: true });
       })

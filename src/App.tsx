@@ -10,6 +10,7 @@ import Pipeline from '@/pages/Pipeline';
 import Carteira from '@/pages/Carteira';
 import Conteudo from '@/pages/Conteudo';
 import Contexto from '@/pages/Contexto';
+import Time from '@/pages/Time';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="carteira" element={<Carteira />} />
         <Route path="conteudo" element={<Conteudo />} />
         <Route path="contexto" element={<Contexto />} />
+        <Route path="time"     element={<Time />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

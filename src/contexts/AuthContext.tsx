@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { signOut, getUser } from '@/lib/supabase';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-export const ADMINS = ['juniormarquess1994@gmail.com', 'lucas.brum@reveny.com.br'];
 
 interface AuthUser {
   id: string;
@@ -33,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((u) => {
         if (u?.email) {
           setToken(stored);
-          setUser({ id: u.id, email: u.email, isAdmin: ADMINS.includes(u.email) });
+          setUser({ id: u.id, email: u.email, isAdmin: true });
         } else {
           localStorage.removeItem('hq_token');
         }

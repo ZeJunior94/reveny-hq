@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Lightbulb, Wrench, TrendingUp, Users, PenLine, BookOpen, LogOut,
+  LayoutDashboard, Lightbulb, Wrench, TrendingUp, Users, PenLine, BookOpen, LogOut, Shield,
 } from 'lucide-react';
 
 const NAV = [
@@ -15,6 +15,7 @@ const NAV = [
 
 const NAV_CONFIG = [
   { path: '/contexto', label: 'Contexto', icon: BookOpen, color: '#7aaec7' },
+  { path: '/time',     label: 'Time',     icon: Shield,   color: '#a78bfa' },
 ];
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
