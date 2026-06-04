@@ -22,7 +22,7 @@ const SUGGESTIONS = [
   'Qual cliente está mais ativo?',
 ];
 
-const PLANS = ['aprendiz', 'pro', 'agencia', 'admin'] as const;
+const PLANS = ['starter', 'agencia_core', 'agencia_pro', 'admin'] as const;
 
 const planColor: Record<string, string> = {
   admin: '#a78bfa', agencia: '#7aaa4a', pro: '#f59e0b',
