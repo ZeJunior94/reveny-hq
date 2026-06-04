@@ -6,7 +6,7 @@ const PROXY = (
   'https://mailflow-seu-email-inteligente-production.up.railway.app'
 ).trim();
 
-type Stage = 'prospect' | 'contato' | 'demo' | 'piloto' | 'cliente';
+type Stage = 'prospect' | 'contato' | 'followup1' | 'demo' | 'followup2' | 'piloto' | 'cliente';
 
 interface Lead {
   id: string; name: string | null; company: string; stage: Stage;
@@ -15,11 +15,13 @@ interface Lead {
 }
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: 'prospect', label: 'Prospect', color: '#9ca3af' },
-  { key: 'contato',  label: 'Contato',  color: '#4a7fa5' },
-  { key: 'demo',     label: 'Demo',     color: '#f59e0b' },
-  { key: 'piloto',   label: 'Piloto',   color: '#a78bfa' },
-  { key: 'cliente',  label: 'Cliente',  color: '#7aaa4a' },
+  { key: 'prospect',  label: 'Prospect',    color: '#9ca3af' },
+  { key: 'contato',   label: 'Contato',     color: '#4a7fa5' },
+  { key: 'followup1', label: 'Follow-up 1', color: '#22d3ee' },
+  { key: 'demo',      label: 'Demo',        color: '#f59e0b' },
+  { key: 'followup2', label: 'Follow-up 2', color: '#fb923c' },
+  { key: 'piloto',    label: 'Piloto',      color: '#a78bfa' },
+  { key: 'cliente',   label: 'Cliente',     color: '#7aaa4a' },
 ];
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
@@ -297,7 +299,7 @@ export default function Pipeline() {
       {/* Kanban */}
       <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>Pipeline</div>
       <div className="overflow-x-auto pb-2">
-        <div className="grid grid-cols-5 gap-3" style={{ minWidth: 800 }}>
+        <div className="grid grid-cols-7 gap-3" style={{ minWidth: 1120 }}>
           {STAGES.map(col => (
             <div key={col.key} style={{ ...card, padding: '0.85rem', minHeight: 240, borderTop: `2px solid ${col.color}30` }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
