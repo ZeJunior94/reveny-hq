@@ -201,7 +201,12 @@ export default function Pipeline() {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error);
-      setLeads(prev => [data.lead, ...prev]);
+      if (data.created) {
+        setLeads(prev => [data.lead, ...prev]);
+      } else {
+        setLeads(prev => prev.map(l => l.id === data.lead.id ? data.lead : l));
+        setSelectedLead(prev => prev?.id === data.lead.id ? data.lead : prev);
+      }
       setInput('');
     } catch (err) { console.error('[pipeline/add]', err); }
     finally { setLoading(false); }
