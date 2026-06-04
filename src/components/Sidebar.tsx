@@ -1,16 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Lightbulb, Wrench, TrendingUp, Users, PenLine, BookOpen, LogOut, Shield,
+  LayoutDashboard, Layers, TrendingUp, Users, PenLine, BookOpen, LogOut, Shield,
 } from 'lucide-react';
 
 const NAV = [
-  { path: '/',         label: 'Hub',            icon: LayoutDashboard, color: '#7aaec7' },
-  { path: '/pm',       label: 'PM de Features', icon: Lightbulb,       color: '#7aaa4a' },
-  { path: '/builder',  label: 'Builder',        icon: Wrench,          color: '#4a7fa5' },
-  { path: '/pipeline', label: 'Pipeline',       icon: TrendingUp,      color: '#f59e0b' },
-  { path: '/carteira', label: 'Carteira',       icon: Users,           color: '#7aaec7' },
-  { path: '/conteudo', label: 'Conteúdo',       icon: PenLine,         color: '#a78bfa' },
+  { path: '/',         label: 'Hub',      icon: LayoutDashboard, color: '#7aaec7' },
+  { path: '/produto',  label: 'Produto',  icon: Layers,          color: '#7aaa4a' },
+  { path: '/pipeline', label: 'Pipeline', icon: TrendingUp,      color: '#f59e0b' },
+  { path: '/carteira', label: 'Carteira', icon: Users,           color: '#7aaec7' },
+  { path: '/conteudo', label: 'Conteúdo', icon: PenLine,         color: '#a78bfa' },
 ];
 
 const NAV_CONFIG = [

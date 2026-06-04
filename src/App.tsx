@@ -4,8 +4,7 @@ import Layout from '@/components/Layout';
 import Login from '@/pages/Login';
 import AuthCallback from '@/pages/AuthCallback';
 import Hub from '@/pages/Hub';
-import PM from '@/pages/PM';
-import Builder from '@/pages/Builder';
+import Produto from '@/pages/Produto';
 import Pipeline from '@/pages/Pipeline';
 import Carteira from '@/pages/Carteira';
 import Conteudo from '@/pages/Conteudo';
@@ -52,8 +51,7 @@ function AppRoutes() {
         }
       >
         <Route index element={<Hub />} />
-        <Route path="pm" element={<PM />} />
-        <Route path="builder" element={<Builder />} />
+        <Route path="produto" element={<Produto />} />
         <Route path="pipeline" element={<Pipeline />} />
         <Route path="carteira" element={<Carteira />} />
         <Route path="conteudo" element={<Conteudo />} />
