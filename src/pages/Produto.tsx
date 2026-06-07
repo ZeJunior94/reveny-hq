@@ -206,19 +206,19 @@ export default function Produto() {
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function parseJsonBug(raw: string): BugForm | null {
     const sanitize = (s: string) => s
-      .replace(/[‘’]/g, “’”).replace(/[“”]/g, ‘”’).replace(/[​﻿​﻿]/g, ‘’).trim();
+      .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B\uFEFF]/g, '').trim();
     const clean = sanitize(raw);
 
     const extract = (s: string): string => {
-      const start = s.indexOf(‘{‘);
+      const start = s.indexOf('{');
       if (start === -1) return s;
       let depth = 0, end = -1, inStr = false, esc = false;
       for (let i = start; i < s.length; i++) {
         const ch = s[i];
         if (esc) { esc = false; continue; }
-        if (ch === ‘\\’ && inStr) { esc = true; continue; }
-        if (ch === ‘”’) { inStr = !inStr; continue; }
-        if (!inStr) { if (ch === ‘{‘) depth++; else if (ch === ‘}’) { depth--; if (depth === 0) { end = i; break; } } }
+        if (ch === '\\' && inStr) { esc = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (!inStr) { if (ch === '{') depth++; else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } } }
       }
       return end !== -1 ? s.slice(start, end + 1) : s;
     };
@@ -226,31 +226,31 @@ export default function Produto() {
     try {
       const p = JSON.parse(extract(clean));
       if (!p.sintoma || !p.causa || !p.correcao) return null;
-      return { sintoma: p.sintoma, causa: p.causa, arquivo: p.arquivo ?? ‘’, correcao: p.correcao, como_testar: p.como_testar ?? ‘’ };
+      return { sintoma: p.sintoma, causa: p.causa, arquivo: p.arquivo ?? '', correcao: p.correcao, como_testar: p.como_testar ?? '' };
     } catch { return null; }
   }
 
   async function handleBugJsonSave() {
     const parsed = parseJsonBug(rawJson);
-    if (!parsed) { alert(‘JSON inválido — verifique se copiou o bloco completo.’); return; }
+    if (!parsed) { alert('JSON inválido — verifique se copiou o bloco completo.'); return; }
     setBugSaving(true);
     try {
       const r = await fetch(`${PROXY}/api/hq/bugs`, {
-        method: ‘POST’, headers: authH, body: JSON.stringify(parsed),
+        method: 'POST', headers: authH, body: JSON.stringify(parsed),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error);
       setBugs(prev => [data.bug, ...prev]);
-      setRawJson(‘’);
-    } catch (err) { console.error(‘[bugs/json-save]’, err); alert(‘Erro ao salvar.’); }
+      setRawJson('');
+    } catch (err) { console.error('[bugs/json-save]', err); alert('Erro ao salvar.'); }
     finally { setBugSaving(false); }
   }
 
   function applyBugJson() {
     const parsed = parseJsonBug(rawJson);
-    if (!parsed) { alert(‘JSON inválido — verifique se copiou o bloco completo.’); return; }
+    if (!parsed) { alert('JSON inválido — verifique se copiou o bloco completo.'); return; }
     setBugForm(parsed);
-    setRawJson(‘’);
+    setRawJson('');
   }
 
   async function handleBugSave() {
