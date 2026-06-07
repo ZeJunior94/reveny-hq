@@ -224,10 +224,19 @@ export default function Produto() {
     };
 
     try {
-      const p = JSON.parse(extract(clean));
-      if (!p.sintoma || !p.causa || !p.correcao) return null;
+      const extracted = extract(clean);
+      console.log('[parseJsonBug] extracted:', JSON.stringify(extracted.slice(0, 200)));
+      const p = JSON.parse(extracted);
+      console.log('[parseJsonBug] parsed keys:', Object.keys(p));
+      if (!p.sintoma || !p.causa || !p.correcao) {
+        console.log('[parseJsonBug] missing fields — sintoma:', !!p.sintoma, 'causa:', !!p.causa, 'correcao:', !!p.correcao);
+        return null;
+      }
       return { sintoma: p.sintoma, causa: p.causa, arquivo: p.arquivo ?? '', correcao: p.correcao, como_testar: p.como_testar ?? '' };
-    } catch { return null; }
+    } catch (e) {
+      console.log('[parseJsonBug] JSON.parse error:', e);
+      return null;
+    }
   }
 
   async function handleBugJsonSave() {
