@@ -205,25 +205,45 @@ export default function Produto() {
 
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function applyBugJson() {
-    const attempt = (str: string) => {
+    // normalize smart quotes and zero-width chars that break JSON.parse
+    const sanitize = (s: string) => s
+      .replace(/[‘’]/g, "'")
+      .replace(/[“”]/g, '"')
+      .replace(/[​﻿]/g, '')
+      .trim();
+
+    const apply = (str: string) => {
       const p = JSON.parse(str);
       setBugForm({ sintoma: p.sintoma ?? '', causa: p.causa ?? '', arquivo: p.arquivo ?? '', correcao: p.correcao ?? '', como_testar: p.como_testar ?? '' });
       setRawJson('');
     };
-    try { attempt(rawJson.trim()); return; } catch { /* try extraction */ }
+
+    const clean = sanitize(rawJson);
+
+    // 1. try direct parse
+    try { apply(clean); return; } catch { /* fall through */ }
+
+    // 2. extract via balanced-brace scan (handles {placeholders} inside strings)
     try {
-      // extract outermost balanced braces
-      const start = rawJson.indexOf('{');
-      if (start === -1) throw new Error('no opening brace');
-      let depth = 0, end = -1;
-      for (let i = start; i < rawJson.length; i++) {
-        const ch = rawJson[i];
-        if (ch === '{') depth++;
-        else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
+      const start = clean.indexOf('{');
+      if (start === -1) throw new Error();
+      let depth = 0, end = -1, inStr = false, esc = false;
+      for (let i = start; i < clean.length; i++) {
+        const ch = clean[i];
+        if (esc) { esc = false; continue; }
+        if (ch === '\\' && inStr) { esc = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (!inStr) {
+          if (ch === '{') depth++;
+          else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
+        }
       }
-      if (end === -1) throw new Error('no closing brace');
-      attempt(rawJson.slice(start, end + 1));
-    } catch { alert('JSON inválido — cole o bloco completo gerado pelo Claude Code.'); }
+      if (end === -1) throw new Error();
+      apply(clean.slice(start, end + 1));
+    } catch (e) {
+      console.error('[applyBugJson]', e, '\nInput:', clean.slice(0, 200));
+      alert('JSON inválido — cole o bloco completo gerado pelo Claude Code.');
+    }
   }
 
   async function handleBugSave() {
