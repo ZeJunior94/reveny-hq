@@ -206,7 +206,9 @@ export default function Produto() {
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function parseJsonBug(raw: string): BugForm | null {
     const sanitize = (s: string) => s
-      .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B\uFEFF]/g, '').trim();
+      .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B\uFEFF]/g, '')
+      .replace(/\r?\n\s*/g, ' ')
+      .trim();
     const clean = sanitize(raw);
 
     const extract = (s: string): string => {
@@ -224,19 +226,10 @@ export default function Produto() {
     };
 
     try {
-      const extracted = extract(clean);
-      console.log('[parseJsonBug] extracted:', JSON.stringify(extracted.slice(0, 200)));
-      const p = JSON.parse(extracted);
-      console.log('[parseJsonBug] parsed keys:', Object.keys(p));
-      if (!p.sintoma || !p.causa || !p.correcao) {
-        console.log('[parseJsonBug] missing fields — sintoma:', !!p.sintoma, 'causa:', !!p.causa, 'correcao:', !!p.correcao);
-        return null;
-      }
+      const p = JSON.parse(extract(clean));
+      if (!p.sintoma || !p.causa || !p.correcao) return null;
       return { sintoma: p.sintoma, causa: p.causa, arquivo: p.arquivo ?? '', correcao: p.correcao, como_testar: p.como_testar ?? '' };
-    } catch (e) {
-      console.log('[parseJsonBug] JSON.parse error:', e);
-      return null;
-    }
+    } catch { return null; }
   }
 
   async function handleBugJsonSave() {
