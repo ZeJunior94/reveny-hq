@@ -30,8 +30,8 @@ const planColor: Record<string, string> = {
 };
 
 const jakarta: React.CSSProperties  = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
+const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
 const ACCENT = '#7aaec7';
 
 export default function Carteira() {
@@ -136,13 +136,13 @@ export default function Carteira() {
 
       {/* Header + Tabs */}
       <div className="mb-6">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
           Agente de Carteira
         </h1>
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
           Base ativa — atividade, retenção e churn
         </p>
-        <div style={{ display: 'flex', gap: 0, marginTop: '1.25rem', borderBottom: '1px solid rgba(74,127,165,.1)' }}>
+        <div style={{ display: 'flex', gap: 0, marginTop: '1.25rem', borderBottom: '1px solid var(--border-main)' }}>
           {TABS.map(tab => (
             <button
               key={tab.id}
@@ -150,7 +150,7 @@ export default function Carteira() {
               style={{
                 padding: '0.5rem 1.1rem 0.6rem',
                 fontSize: '0.8rem', fontWeight: 600,
-                color: activeTab === tab.id ? ACCENT : 'rgba(255,255,255,.35)',
+                color: activeTab === tab.id ? ACCENT : 'var(--text-ter)',
                 background: 'transparent',
                 border: 'none',
                 borderBottom: activeTab === tab.id ? `2px solid ${ACCENT}` : '2px solid transparent',
@@ -171,7 +171,7 @@ export default function Carteira() {
           {resumo && (
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-6">
               {[
-                { label: 'Total',      value: resumo.totalClientes, color: 'white'    },
+                { label: 'Total',      value: resumo.totalClientes, color: 'var(--text-pri)' },
                 { label: 'Ativos',     value: resumo.ativos,        color: '#7aaa4a'  },
                 { label: 'Em risco',   value: resumo.emRisco,       color: '#f59e0b'  },
                 { label: 'Inativos',   value: resumo.inativos,      color: '#ef4444'  },
@@ -179,7 +179,7 @@ export default function Carteira() {
               ].map(s => (
                 <div key={s.label} style={{ ...card, padding: '0.85rem', textAlign: 'center', borderLeft: `2px solid ${s.color}40` }}>
                   <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.3rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.3)', marginTop: '0.25rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.62rem', color: 'var(--text-ter)', marginTop: '0.25rem' }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -188,7 +188,7 @@ export default function Carteira() {
           <div style={{ ...card, overflow: 'hidden', marginBottom: '1rem' }}>
             <div style={{ minHeight: 300, maxHeight: 420, overflowY: 'auto', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {messages.length === 0 && (
-                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.2)', textAlign: 'center', marginTop: '3rem' }}>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-ter)', textAlign: 'center', marginTop: '3rem' }}>
                   Pergunte qualquer coisa sobre sua carteira de clientes.
                 </div>
               )}
@@ -198,8 +198,8 @@ export default function Carteira() {
                     maxWidth: '85%', borderRadius: 10, padding: '0.75rem 1rem',
                     fontSize: '0.82rem', lineHeight: 1.6, whiteSpace: 'pre-wrap',
                     ...(m.role === 'user'
-                      ? { background: 'rgba(122,174,199,.12)', color: 'rgba(255,255,255,.8)', border: '1px solid rgba(122,174,199,.2)' }
-                      : { background: 'rgba(17,30,48,.5)',      color: 'rgba(255,255,255,.7)', border: '1px solid rgba(74,127,165,.1)' })
+                      ? { background: 'rgba(122,174,199,.12)', color: 'var(--text-sec)', border: '1px solid rgba(122,174,199,.2)' }
+                      : { background: 'var(--bg-inner)',       color: 'var(--text-sec)', border: '1px solid var(--border-inner)' })
                   }}>
                     {m.text}
                   </div>
@@ -207,9 +207,9 @@ export default function Carteira() {
               ))}
               {loading && (
                 <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-                  <div style={{ background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.1)', borderRadius: 10, padding: '0.75rem 1rem' }}>
+                  <div style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 10, padding: '0.75rem 1rem' }}>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)', marginRight: 6 }}>consultando carteira</span>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-ter)', marginRight: 6 }}>consultando carteira</span>
                       {[0, 1, 2].map(i => (
                         <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: `${ACCENT}60`, animationDelay: `${i * 0.15}s` }} />
                       ))}
@@ -219,7 +219,7 @@ export default function Carteira() {
               )}
               <div ref={bottomRef} />
             </div>
-            <div style={{ borderTop: '1px solid rgba(74,127,165,.1)', padding: '0.85rem 1.25rem', display: 'flex', gap: 10 }}>
+            <div style={{ borderTop: '1px solid var(--border-main)', padding: '0.85rem 1.25rem', display: 'flex', gap: 10 }}>
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
@@ -242,7 +242,7 @@ export default function Carteira() {
                 key={s}
                 onClick={() => handleQuery(s)}
                 disabled={loading}
-                style={{ textAlign: 'left', fontSize: '0.82rem', color: 'rgba(255,255,255,.4)', padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid transparent', background: 'transparent', cursor: 'pointer', transition: 'all .15s' }}
+                style={{ textAlign: 'left', fontSize: '0.82rem', color: 'var(--text-sec)', padding: '0.5rem 0.75rem', borderRadius: 6, border: '1px solid transparent', background: 'transparent', cursor: 'pointer', transition: 'all .15s' }}
                 className="hover:text-white/70 hover:bg-[#4a7fa5]/8 hover:border-[#4a7fa5]/15 disabled:opacity-30"
               >
                 {s}
@@ -262,16 +262,16 @@ export default function Carteira() {
               onChange={e => setSearch(e.target.value)}
               placeholder="Buscar por e-mail ou nome..."
               style={{
-                flex: 1, background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.15)',
+                flex: 1, background: 'var(--bg-card)', border: '1px solid var(--input-border)',
                 borderRadius: 6, padding: '0.5rem 0.85rem',
-                color: 'rgba(255,255,255,.8)', fontSize: '0.82rem', outline: 'none',
+                color: 'var(--text-sec)', fontSize: '0.82rem', outline: 'none',
               }}
             />
             <button
               onClick={fetchCustomers}
               disabled={loadingCustomers}
               style={{
-                background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.15)',
+                background: 'var(--bg-card)', border: '1px solid var(--input-border)',
                 borderRadius: 6, padding: '0.5rem 0.85rem',
                 color: ACCENT, fontSize: '0.9rem', cursor: 'pointer',
                 opacity: loadingCustomers ? 0.5 : 1,
@@ -282,18 +282,18 @@ export default function Carteira() {
           {/* Tabela */}
           <div style={{ ...card, overflow: 'hidden' }}>
             {loadingCustomers ? (
-              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: '0.82rem' }}>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-ter)', fontSize: '0.82rem' }}>
                 Carregando clientes...
               </div>
             ) : filtered.length === 0 ? (
-              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: '0.82rem' }}>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-ter)', fontSize: '0.82rem' }}>
                 Nenhum cliente encontrado.
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(74,127,165,.12)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--border-card)' }}>
                       {['Cliente', 'Plano', 'E-mails / mês', 'Última atividade', ''].map(h => (
                         <th key={h} style={{ padding: '0.65rem 1rem', textAlign: 'left', ...dimLabel }}>{h}</th>
                       ))}
@@ -306,10 +306,10 @@ export default function Carteira() {
                         ? new Date(c.last_activity).toLocaleDateString('pt-BR')
                         : '—';
                       return (
-                        <tr key={c.user_id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid rgba(74,127,165,.06)' : 'none' }}>
+                        <tr key={c.user_id} style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--border-inner)' : 'none' }}>
                           <td style={{ padding: '0.75rem 1rem' }}>
-                            <div style={{ color: 'rgba(255,255,255,.85)', fontWeight: 600, marginBottom: 1 }}>{c.company_name}</div>
-                            <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '0.72rem' }}>{c.email}</div>
+                            <div style={{ color: 'var(--text-pri)', fontWeight: 600, marginBottom: 1 }}>{c.company_name}</div>
+                            <div style={{ color: 'var(--text-ter)', fontSize: '0.72rem' }}>{c.email}</div>
                           </td>
                           <td style={{ padding: '0.75rem 1rem' }}>
                             <span style={{
@@ -320,10 +320,10 @@ export default function Carteira() {
                               {c.plan || 'sem plano'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', color: 'rgba(255,255,255,.55)' }}>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-sec)' }}>
                             {c.credits_used}{c.credits_limit ? ` / ${c.credits_limit}` : ''}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', color: 'rgba(255,255,255,.35)', fontSize: '0.75rem' }}>
+                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-ter)', fontSize: '0.75rem' }}>
                             {lastAct}
                           </td>
                           <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
@@ -346,7 +346,7 @@ export default function Carteira() {
               </div>
             )}
           </div>
-          <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,.2)' }}>
+          <div style={{ marginTop: '0.5rem', fontSize: '0.72rem', color: 'var(--text-ter)' }}>
             {filtered.length} cliente{filtered.length !== 1 ? 's' : ''}
           </div>
         </div>
@@ -365,19 +365,19 @@ export default function Carteira() {
             {/* Close */}
             <button
               onClick={() => setModalUser(null)}
-              style={{ position: 'absolute', top: 12, right: 14, background: 'none', border: 'none', color: 'rgba(255,255,255,.3)', fontSize: '1.2rem', cursor: 'pointer', lineHeight: 1 }}
+              style={{ position: 'absolute', top: 12, right: 14, background: 'none', border: 'none', color: 'var(--text-ter)', fontSize: '1.2rem', cursor: 'pointer', lineHeight: 1 }}
             >×</button>
 
             {/* User info */}
             <div style={{ marginBottom: '1.25rem' }}>
               <div style={{ ...dimLabel, marginBottom: '0.4rem' }}>Alterar plano</div>
-              <div style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem' }}>{modalUser.company_name}</div>
-              <div style={{ color: 'rgba(255,255,255,.35)', fontSize: '0.78rem' }}>{modalUser.email}</div>
+              <div style={{ color: 'var(--text-pri)', fontWeight: 700, fontSize: '0.95rem' }}>{modalUser.company_name}</div>
+              <div style={{ color: 'var(--text-ter)', fontSize: '0.78rem' }}>{modalUser.email}</div>
             </div>
 
             {/* Plano atual */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1.25rem', padding: '0.6rem 0.85rem', background: 'rgba(255,255,255,.04)', borderRadius: 6, border: '1px solid rgba(255,255,255,.07)' }}>
-              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.4)' }}>Plano atual:</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '1.25rem', padding: '0.6rem 0.85rem', background: 'var(--bg-inner)', borderRadius: 6, border: '1px solid var(--border-inner)' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-ter)' }}>Plano atual:</span>
               {(() => {
                 const color = planColor[modalUser.plan || ''] || '#6b7280';
                 return (
@@ -399,12 +399,12 @@ export default function Carteira() {
                 onChange={e => setNewPlan(e.target.value)}
                 style={{
                   width: '100%', padding: '0.55rem 0.85rem',
-                  background: 'rgba(17,30,48,.9)', border: '1px solid rgba(74,127,165,.2)',
-                  borderRadius: 6, color: 'white', fontSize: '0.85rem', outline: 'none',
+                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                  borderRadius: 6, color: 'var(--text-pri)', fontSize: '0.85rem', outline: 'none',
                 }}
               >
                 {PLANS.map(p => (
-                  <option key={p} value={p} style={{ background: '#0b1520' }}>{p}</option>
+                  <option key={p} value={p} style={{ background: 'var(--bg-base)' }}>{p}</option>
                 ))}
               </select>
             </div>
@@ -421,8 +421,8 @@ export default function Carteira() {
                 rows={3}
                 style={{
                   width: '100%', padding: '0.55rem 0.85rem', resize: 'vertical',
-                  background: 'rgba(17,30,48,.9)', border: '1px solid rgba(74,127,165,.2)',
-                  borderRadius: 6, color: 'rgba(255,255,255,.8)', fontSize: '0.82rem',
+                  background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+                  borderRadius: 6, color: 'var(--text-sec)', fontSize: '0.82rem',
                   outline: 'none', lineHeight: 1.5,
                 }}
               />
@@ -444,7 +444,7 @@ export default function Carteira() {
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setModalUser(null)}
-                style={{ padding: '0.5rem 1rem', borderRadius: 6, fontSize: '0.82rem', background: 'transparent', border: '1px solid rgba(255,255,255,.1)', color: 'rgba(255,255,255,.4)', cursor: 'pointer' }}
+                style={{ padding: '0.5rem 1rem', borderRadius: 6, fontSize: '0.82rem', background: 'transparent', border: '1px solid var(--border-main)', color: 'var(--text-ter)', cursor: 'pointer' }}
               >
                 Cancelar
               </button>

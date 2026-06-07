@@ -23,12 +23,12 @@ const COLS: { key: Status; label: string; color: string }[] = [
 ];
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const innerCard = { background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6 };
-const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const innerCard = { background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'var(--skel-bg)' }} />;
 }
 
 function IceBadge({ ice }: { ice: number }) {
@@ -101,35 +101,35 @@ export default function PM() {
       <div className="mb-8">
         <div className="flex items-end justify-between">
           <div>
-            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
               PM de Features
             </h1>
-            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
               Ideias → ICE Score → backlog
             </p>
           </div>
           {!fetching && (
             <div className="flex gap-6">
               {[
-                { label: 'Total',    value: features.length,            color: 'white' },
+                { label: 'Total',    value: features.length,            color: 'var(--text-pri)' },
                 { label: 'Aprovadas', value: byStatus('aprovada').length, color: '#7aaa4a' },
                 { label: 'Building', value: byStatus('building').length, color: '#4a7fa5' },
               ].map(s => (
                 <div key={s.label} className="text-right">
                   <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.3)', marginTop: '0.2rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)', marginTop: '0.2rem' }}>{s.label}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
 
       {/* Input */}
       <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
         <div style={{ ...sectionLabel, marginBottom: '0.85rem' }}>● Nova ideia de feature</div>
-        <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+        <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -138,8 +138,8 @@ export default function PM() {
           rows={3}
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter para analisar</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>⌘+Enter para analisar</span>
           <button
             onClick={handleAnalyze}
             disabled={loading || !input.trim()}
@@ -167,7 +167,7 @@ export default function PM() {
         {!fetching && features.length > 0 && (
           <button
             onClick={clearAll}
-            style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}
+            style={{ fontSize: '0.68rem', color: 'var(--text-sec)', background: 'transparent', border: '1px solid var(--border-main)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}
           >
             limpar tudo
           </button>
@@ -198,33 +198,33 @@ export default function PM() {
               {!fetching && (
                 <div className="flex flex-col gap-2">
                   {byStatus(col.key).length === 0 && (
-                    <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.12)', textAlign: 'center', marginTop: '2rem' }}>vazio</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', textAlign: 'center', marginTop: '2rem' }}>vazio</div>
                   )}
                   {byStatus(col.key).map(f => (
                     <div key={f.id} style={{ ...innerCard, padding: '0.75rem' }} className="group hover:border-[#4a7fa5]/20 transition-colors">
-                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, lineHeight: 1.4, marginBottom: '0.4rem' }}>{f.title}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontWeight: 500, lineHeight: 1.4, marginBottom: '0.4rem' }}>{f.title}</p>
                       {f.ice_reasoning && (
-                        <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.28)', lineHeight: 1.5, marginBottom: '0.6rem' }}>{f.ice_reasoning}</p>
+                        <p style={{ fontSize: '0.65rem', color: 'var(--text-ter)', lineHeight: 1.5, marginBottom: '0.6rem' }}>{f.ice_reasoning}</p>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <IceBadge ice={f.ice} />
                           {f.ice_impact > 0 && (
-                            <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,.2)' }}>{f.ice_impact}/{f.ice_confidence}/{f.ice_ease}</span>
+                            <span style={{ fontSize: '0.6rem', color: 'var(--text-ter)' }}>{f.ice_impact}/{f.ice_confidence}/{f.ice_ease}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <select
                             value={f.status}
                             onChange={e => moveStatus(f.id, e.target.value as Status)}
-                            style={{ background: 'rgba(11,21,32,.8)', color: 'rgba(255,255,255,.4)', fontSize: '0.62rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.25rem' }}
+                            style={{ background: 'var(--input-bg)', color: 'var(--text-sec)', fontSize: '0.62rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.25rem' }}
                           >
                             <option value="ideia">ideia</option>
                             <option value="aprovada">aprovada</option>
                             <option value="building">building</option>
                             <option value="done">done</option>
                           </select>
-                          <button onClick={() => deleteFeature(f.id)} style={{ color: 'rgba(255,255,255,.2)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }} className="hover:text-red-400 transition-colors">×</button>
+                          <button onClick={() => deleteFeature(f.id)} style={{ color: 'var(--text-ter)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }} className="hover:text-red-400 transition-colors">×</button>
                         </div>
                       </div>
                     </div>

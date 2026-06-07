@@ -28,9 +28,9 @@ interface PRD { id: string; feature: string; content: string; tasks: string[]; c
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card   = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const inner  = { background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6 };
-const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
+const card   = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const inner  = { background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6 };
+const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
 const ACCENT = '#4a7fa5';
 const GREEN  = '#7aaa4a';
 
@@ -43,7 +43,7 @@ const COLS: { key: Status; label: string; color: string }[] = [
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 function Skel({ className }: { className?: string }) {
-  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'var(--skel-bg)' }} />;
 }
 
 function IceBadge({ ice }: { ice: number }) {
@@ -206,7 +206,7 @@ export default function Produto() {
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function parseJsonBug(raw: string): BugForm | null {
     const sanitize = (s: string) => s
-      .replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"').replace(/[\u200B\uFEFF]/g, '')
+      .replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[​﻿]/g, '')
       .replace(/\r?\n\s*/g, ' ')
       .trim();
     const clean = sanitize(raw);
@@ -303,10 +303,10 @@ export default function Produto() {
       <div className="mb-6">
         <div className="flex items-end justify-between">
           <div>
-            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
               Produto
             </h1>
-            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
               Ideias → ICE Score → PRD → Claude Code
             </p>
           </div>
@@ -315,20 +315,20 @@ export default function Produto() {
           {tab === 'backlog' && !fetching && (
             <div className="flex gap-6">
               {[
-                { label: 'Total',     value: features.length,            color: 'white'  },
+                { label: 'Total',     value: features.length,            color: 'var(--text-pri)' },
                 { label: 'Aprovadas', value: byStatus('aprovada').length, color: GREEN    },
                 { label: 'Building',  value: byStatus('building').length, color: ACCENT   },
               ].map(s => (
                 <div key={s.label} className="text-right">
                   <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.3)', marginTop: '0.2rem' }}>{s.label}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)', marginTop: '0.2rem' }}>{s.label}</div>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: 0, marginTop: '1.25rem', borderBottom: '1px solid rgba(74,127,165,.1)' }}>
+        <div style={{ display: 'flex', gap: 0, marginTop: '1.25rem', borderBottom: '1px solid var(--border-main)' }}>
           {TABS.map(t => (
             <button
               key={t.id}
@@ -336,7 +336,7 @@ export default function Produto() {
               style={{
                 padding: '0.5rem 1.1rem 0.6rem',
                 fontSize: '0.8rem', fontWeight: 600,
-                color: tab === t.id ? '#7aaec7' : 'rgba(255,255,255,.35)',
+                color: tab === t.id ? '#7aaec7' : 'var(--text-ter)',
                 background: 'transparent', border: 'none',
                 borderBottom: tab === t.id ? '2px solid #7aaec7' : '2px solid transparent',
                 cursor: 'pointer', transition: 'all .15s', marginBottom: -1,
@@ -354,7 +354,7 @@ export default function Produto() {
           {/* Input */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
             <div style={{ ...dimLabel, marginBottom: '0.85rem' }}>● Nova ideia de feature</div>
-            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
             <textarea
               value={pmInput}
               onChange={e => setPmInput(e.target.value)}
@@ -363,8 +363,8 @@ export default function Produto() {
               rows={3}
               className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter para analisar</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>⌘+Enter para analisar</span>
               <button
                 onClick={handleAnalyze}
                 disabled={pmLoading || !pmInput.trim()}
@@ -392,7 +392,7 @@ export default function Produto() {
             {!fetching && features.length > 0 && (
               <button
                 onClick={clearAllFeatures}
-                style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}
+                style={{ fontSize: '0.68rem', color: 'var(--text-sec)', background: 'transparent', border: '1px solid var(--border-main)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}
               >
                 limpar tudo
               </button>
@@ -423,26 +423,26 @@ export default function Produto() {
                   {!fetching && (
                     <div className="flex flex-col gap-2">
                       {byStatus(col.key).length === 0 && (
-                        <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.12)', textAlign: 'center', marginTop: '2rem' }}>vazio</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', textAlign: 'center', marginTop: '2rem' }}>vazio</div>
                       )}
                       {byStatus(col.key).map(f => (
                         <div key={f.id} style={{ ...inner, padding: '0.75rem' }} className="group hover:border-[#4a7fa5]/20 transition-colors">
-                          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, lineHeight: 1.4, marginBottom: '0.4rem' }}>{f.title}</p>
+                          <p style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontWeight: 500, lineHeight: 1.4, marginBottom: '0.4rem' }}>{f.title}</p>
                           {f.ice_reasoning && (
-                            <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.28)', lineHeight: 1.5, marginBottom: '0.6rem' }}>{f.ice_reasoning}</p>
+                            <p style={{ fontSize: '0.65rem', color: 'var(--text-ter)', lineHeight: 1.5, marginBottom: '0.6rem' }}>{f.ice_reasoning}</p>
                           )}
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <IceBadge ice={f.ice} />
                               {f.ice_impact > 0 && (
-                                <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,.2)' }}>{f.ice_impact}/{f.ice_confidence}/{f.ice_ease}</span>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-ter)' }}>{f.ice_impact}/{f.ice_confidence}/{f.ice_ease}</span>
                               )}
                             </div>
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <select
                                 value={f.status}
                                 onChange={e => moveStatus(f.id, e.target.value as Status)}
-                                style={{ background: 'rgba(11,21,32,.8)', color: 'rgba(255,255,255,.4)', fontSize: '0.62rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.25rem' }}
+                                style={{ background: 'var(--input-bg)', color: 'var(--text-sec)', fontSize: '0.62rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.25rem' }}
                               >
                                 <option value="ideia">ideia</option>
                                 <option value="aprovada">aprovada</option>
@@ -451,7 +451,7 @@ export default function Produto() {
                               </select>
                               <button
                                 onClick={() => deleteFeature(f.id)}
-                                style={{ color: 'rgba(255,255,255,.2)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
+                                style={{ color: 'var(--text-ter)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', lineHeight: 1 }}
                                 className="hover:text-red-400 transition-colors"
                               >×</button>
                             </div>
@@ -473,7 +473,7 @@ export default function Produto() {
           {/* Cole JSON — salva direto */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ ...dimLabel, color: 'rgba(239,68,68,.7)', marginBottom: '0.85rem' }}>● Cole o JSON do Claude Code e registre com um clique</div>
-            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
             <textarea
               value={rawJson}
               onChange={e => setRawJson(e.target.value)}
@@ -481,8 +481,8 @@ export default function Produto() {
               rows={5}
               className="w-full bg-transparent text-white/70 text-xs placeholder-white/15 focus:outline-none resize-none leading-relaxed font-mono"
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-              <button onClick={applyBugJson} disabled={!rawJson.trim()} style={{ background: 'none', color: 'rgba(255,255,255,.3)', border: 'none', fontSize: '0.72rem', cursor: 'pointer', opacity: !rawJson.trim() ? 0.3 : 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-inner)' }}>
+              <button onClick={applyBugJson} disabled={!rawJson.trim()} style={{ background: 'none', color: 'var(--text-ter)', border: 'none', fontSize: '0.72rem', cursor: 'pointer', opacity: !rawJson.trim() ? 0.3 : 1 }}>
                 preencher campos ↓
               </button>
               <button onClick={handleBugJsonSave} disabled={bugSaving || !rawJson.trim()} style={{ background: '#f87171', color: 'white', border: 'none', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1.1rem', borderRadius: 6, cursor: 'pointer', opacity: bugSaving || !rawJson.trim() ? 0.4 : 1 }}>
@@ -494,7 +494,7 @@ export default function Produto() {
           {/* Formulário */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
             <div style={{ ...dimLabel, marginBottom: '0.85rem' }}>● Registro do bug</div>
-            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1.1rem' }} />
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1.1rem' }} />
             <div className="flex flex-col gap-3">
               {([
                 { key: 'sintoma',     label: 'Sintoma',     placeholder: 'O que o usuário observou',  rows: 2 },
@@ -506,13 +506,13 @@ export default function Produto() {
                 <div key={f.key}>
                   <label style={{ ...dimLabel, display: 'block', marginBottom: '0.35rem' }}>{f.label}</label>
                   {f.rows === 1
-                    ? <input value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm text-white/85 focus:outline-none placeholder-white/25" style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7 }} />
-                    : <textarea value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} rows={f.rows} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm text-white/85 focus:outline-none placeholder-white/25 resize-none leading-relaxed" style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7 }} />
+                    ? <input value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm focus:outline-none placeholder-white/25" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', borderRadius: 7, color: 'var(--text-sec)' }} />
+                    : <textarea value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} rows={f.rows} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm focus:outline-none placeholder-white/25 resize-none leading-relaxed" style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', borderRadius: 7, color: 'var(--text-sec)' }} />
                   }
                 </div>
               ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-inner)' }}>
               <button onClick={handleBugSave} disabled={bugSaving || !canSaveBug} style={{ background: '#f87171', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.5rem 1.2rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: bugSaving || !canSaveBug ? 0.4 : 1 }}>
                 {bugSaving ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />Salvando...</span> : 'Registrar →'}
               </button>
@@ -522,7 +522,7 @@ export default function Produto() {
           {/* Lista */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
             <span style={dimLabel}>Histórico ({bugs.length})</span>
-            <input value={bugSearch} onChange={e => setBugSearch(e.target.value)} placeholder="Buscar..." style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7, color: 'rgba(255,255,255,.7)', fontSize: '0.72rem', padding: '0.3rem 0.7rem', width: 180 }} className="focus:outline-none" />
+            <input value={bugSearch} onChange={e => setBugSearch(e.target.value)} placeholder="Buscar..." style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', borderRadius: 7, color: 'var(--text-sec)', fontSize: '0.72rem', padding: '0.3rem 0.7rem', width: 180 }} className="focus:outline-none" />
           </div>
 
           {!bugsFetched && (
@@ -530,7 +530,7 @@ export default function Produto() {
           )}
 
           {bugsFetched && filteredBugs.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '3rem 0', color: 'rgba(255,255,255,.15)', fontSize: '0.8rem' }}>
+            <div style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-ter)', fontSize: '0.8rem' }}>
               {bugSearch ? 'Nenhum resultado.' : 'Nenhum bug registrado ainda.'}
             </div>
           )}
@@ -541,14 +541,14 @@ export default function Produto() {
                 <div key={b.id} style={{ ...card, padding: '1rem 1.25rem', cursor: 'pointer' }} onClick={() => setBugExpanded(bugExpanded === b.id ? null : b.id)} className="hover:border-[#4a7fa5]/25 transition-all">
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,.85)', lineHeight: 1.35, marginBottom: '0.2rem' }}>{b.sintoma}</div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-pri)', lineHeight: 1.35, marginBottom: '0.2rem' }}>{b.sintoma}</div>
                       {b.arquivo && <div style={{ fontSize: '0.65rem', color: 'rgba(122,174,199,.45)', fontFamily: 'monospace', marginBottom: '0.15rem' }}>{b.arquivo}</div>}
-                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.22)' }}>{new Date(b.created_at).toLocaleDateString('pt-BR')}</div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)' }}>{new Date(b.created_at).toLocaleDateString('pt-BR')}</div>
                     </div>
-                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.18)', flexShrink: 0, marginTop: 2 }}>{bugExpanded === b.id ? '▲' : '▼'}</span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-ter)', flexShrink: 0, marginTop: 2 }}>{bugExpanded === b.id ? '▲' : '▼'}</span>
                   </div>
                   {bugExpanded === b.id && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(74,127,165,.08)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-inner)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       {([
                         { label: 'Causa raiz', value: b.causa },
                         { label: 'Correção',   value: b.correcao },
@@ -556,7 +556,7 @@ export default function Produto() {
                       ] as ({ label: string; value: string } | null)[]).filter(Boolean).map(f => (
                         <div key={f!.label}>
                           <div style={{ ...dimLabel, marginBottom: '0.25rem' }}>{f!.label}</div>
-                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.6 }}>{f!.value}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', lineHeight: 1.6 }}>{f!.value}</div>
                         </div>
                       ))}
                       <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
@@ -581,7 +581,7 @@ export default function Produto() {
           {fetching ? (
             <div className="flex gap-2 mb-6">{[1, 2].map(i => <Skel key={i} className="h-8 w-40 rounded-lg" />)}</div>
           ) : approved.length === 0 ? (
-            <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.25)', marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-sec)', marginBottom: '1.5rem' }}>
               Nenhuma feature aprovada no backlog ainda.{' '}
               <button onClick={() => setTab('backlog')} style={{ color: '#7aaec7', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', textDecoration: 'underline' }}>
                 Ir para o Backlog →
@@ -606,7 +606,7 @@ export default function Produto() {
           {/* Input */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '1.5rem' }}>
             <div style={{ ...dimLabel, color: `${ACCENT}99`, marginBottom: '0.85rem' }}>● Ou descreva diretamente</div>
-            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
             <textarea
               value={prdInput}
               onChange={e => setPrdInput(e.target.value)}
@@ -615,8 +615,8 @@ export default function Produto() {
               rows={3}
               className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter para gerar PRD</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>⌘+Enter para gerar PRD</span>
               <button
                 onClick={() => handleGenerate()}
                 disabled={prdLoading || !prdInput.trim()}
@@ -640,9 +640,9 @@ export default function Produto() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
             <span style={dimLabel}>PRDs gerados</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {prdFetched && <span style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.18)' }}>{prds.length} total</span>}
+              {prdFetched && <span style={{ fontSize: '0.68rem', color: 'var(--text-ter)' }}>{prds.length} total</span>}
               {prdFetched && prds.length > 0 && (
-                <button onClick={clearAllPrds} style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>
+                <button onClick={clearAllPrds} style={{ fontSize: '0.68rem', color: 'var(--text-sec)', background: 'transparent', border: '1px solid var(--border-main)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>
                   limpar tudo
                 </button>
               )}
@@ -658,7 +658,7 @@ export default function Produto() {
               ))}
             </div>
           ) : prds.length === 0 ? (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.18)', marginBottom: '1.5rem' }}>Nenhum PRD gerado ainda.</div>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-ter)', marginBottom: '1.5rem' }}>Nenhum PRD gerado ainda.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
               {prds.map(p => (
@@ -671,14 +671,14 @@ export default function Produto() {
                     : { ...card, padding: '1rem' }
                   }
                 >
-                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, marginBottom: '0.5rem', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontWeight: 500, marginBottom: '0.5rem', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {p.feature}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.25)' }}>{p.tasks?.length ?? 0} tasks</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)' }}>{p.tasks?.length ?? 0} tasks</div>
                     <button
                       onClick={e => { e.stopPropagation(); deletePrd(p.id); }}
-                      style={{ color: 'rgba(255,255,255,.12)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
+                      style={{ color: 'var(--text-ter)', fontSize: '1rem', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}
                       className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all"
                     >×</button>
                   </div>
@@ -694,19 +694,19 @@ export default function Produto() {
                 <div style={{ fontSize: '0.72rem', color: ACCENT }}>{selected.feature}</div>
                 <button
                   onClick={() => handleCopy(selected.content + '\n\nTasks:\n' + selected.tasks?.map((t, i) => `${i + 1}. ${t}`).join('\n'))}
-                  style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer' }}
+                  style={{ fontSize: '0.72rem', color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }}
                   className="hover:text-white/60 transition-colors"
                 >
                   {copied ? '✓ copiado' : 'copiar'}
                 </button>
               </div>
-              <pre style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{selected.content}</pre>
+              <pre style={{ fontSize: '0.72rem', color: 'var(--text-sec)', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{selected.content}</pre>
               {selected.tasks && selected.tasks.length > 0 && (
-                <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
+                <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-main)' }}>
                   <div style={{ ...dimLabel, marginBottom: '0.85rem' }}>Tasks para Claude Code</div>
                   <div className="flex flex-col gap-2">
                     {selected.tasks.map((t, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: '0.75rem', color: 'rgba(255,255,255,.5)' }}>
+                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: '0.75rem', color: 'var(--text-sec)' }}>
                         <span style={{ color: `${ACCENT}60`, fontFamily: 'monospace', flexShrink: 0, width: 20 }}>{String(i + 1).padStart(2, '0')}.</span>
                         {t}
                       </div>

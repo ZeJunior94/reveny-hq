@@ -25,13 +25,13 @@ const STAGES: { key: Stage; label: string; color: string }[] = [
 ];
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const innerCard = { background: 'rgba(17,30,48,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6 };
-const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const innerCard = { background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 const INPUT_CLS = 'w-full rounded-lg px-3 py-2.5 text-white/85 text-sm focus:outline-none transition-all placeholder-white/25 leading-relaxed';
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'var(--skel-bg)' }} />;
 }
 
 function LeadPanel({ lead, onClose, onSave, onDelete }: {
@@ -69,7 +69,7 @@ function LeadPanel({ lead, onClose, onSave, onDelete }: {
   }
 
   const stageColor = STAGES.find(s => s.key === form.stage)?.color ?? '#9ca3af';
-  const inputStyle = { background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', color: 'rgba(255,255,255,.85)' };
+  const inputStyle = { background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-pri)' };
 
   return (
     <>
@@ -77,18 +77,18 @@ function LeadPanel({ lead, onClose, onSave, onDelete }: {
       <div
         ref={panelRef}
         className="fixed top-0 right-0 h-full w-full sm:w-[420px] z-50 flex flex-col"
-        style={{ background: '#111e30', borderLeft: '1px solid rgba(74,127,165,.15)', animation: 'slideIn 0.2s ease-out' }}
+        style={{ background: 'var(--bg-card)', borderLeft: '1px solid var(--border-card)', animation: 'slideIn 0.2s ease-out' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem 1.5rem', borderBottom: '1px solid var(--border-main)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 4, color: stageColor, background: `${stageColor}18` }}>
               {form.stage?.toUpperCase()}
             </span>
-            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.3)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>
               {new Date(lead.created_at).toLocaleDateString('pt-BR')}
             </span>
           </div>
-          <button onClick={onClose} style={{ color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }} className="hover:text-white/70 hover:bg-white/5 transition-all">✕</button>
+          <button onClick={onClose} style={{ color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6 }} className="hover:text-white/70 hover:bg-white/5 transition-all">✕</button>
         </div>
 
         <div className="flex-1 overflow-y-auto" style={{ padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -120,7 +120,7 @@ function LeadPanel({ lead, onClose, onSave, onDelete }: {
                 <button key={s.key} onClick={() => set('stage', s.key)} style={
                   form.stage === s.key
                     ? { color: s.color, background: `${s.color}22`, border: `1px solid ${s.color}50`, fontSize: '0.68rem', padding: '0.3rem 0.7rem', borderRadius: 6, cursor: 'pointer' }
-                    : { color: 'rgba(255,255,255,.3)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', fontSize: '0.68rem', padding: '0.3rem 0.7rem', borderRadius: 6, cursor: 'pointer' }
+                    : { color: 'var(--text-ter)', background: 'transparent', border: '1px solid var(--border-main)', fontSize: '0.68rem', padding: '0.3rem 0.7rem', borderRadius: 6, cursor: 'pointer' }
                 }>{s.label}</button>
               ))}
             </div>
@@ -145,14 +145,14 @@ function LeadPanel({ lead, onClose, onSave, onDelete }: {
           {lead.raw_input && (
             <div>
               <label style={{ ...sectionLabel, display: 'block', marginBottom: '0.4rem' }}>Entrada original</label>
-              <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.2)', lineHeight: 1.6, background: 'rgba(11,21,32,.5)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 6, padding: '0.6rem 0.75rem' }}>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-ter)', lineHeight: 1.6, background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.6rem 0.75rem' }}>
                 {lead.raw_input}
               </p>
             </div>
           )}
         </div>
 
-        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid rgba(74,127,165,.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-main)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={handleDelete} disabled={deleting} style={{ fontSize: '0.72rem', color: 'rgba(239,68,68,.5)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors disabled:opacity-40">
             {deleting ? 'Removendo...' : 'Remover lead'}
           </button>
@@ -232,7 +232,7 @@ export default function Pipeline() {
   }
 
   const STATS = [
-    { label: 'Leads',      value: leads.length,              color: 'white' },
+    { label: 'Leads',      value: leads.length,              color: 'var(--text-pri)' },
     { label: 'Clientes',   value: byStage('cliente').length, color: '#7aaa4a' },
     { label: 'Follow-ups', value: followUps,                 color: '#f59e0b' },
     { label: 'MRR Est.',   value: `R$${totalMrr.toLocaleString('pt-BR')}`, color: '#7aaec7' },
@@ -242,13 +242,13 @@ export default function Pipeline() {
     <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
           Pipeline Comercial
         </h1>
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
           CRM em linguagem natural
         </p>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
 
       {/* Stats */}
@@ -260,7 +260,7 @@ export default function Pipeline() {
             ) : (
               <>
                 <div style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: s.color, lineHeight: 1, marginBottom: '0.3rem' }}>{s.value}</div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.3)' }}>{s.label}</div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-ter)' }}>{s.label}</div>
               </>
             )}
           </div>
@@ -270,7 +270,7 @@ export default function Pipeline() {
       {/* Input */}
       <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
         <div style={{ ...sectionLabel, color: 'rgba(245,158,11,.7)', marginBottom: '0.85rem' }}>● Novo lead ou atualização</div>
-        <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+        <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -279,8 +279,8 @@ export default function Pipeline() {
           rows={3}
           className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-          <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>⌘+Enter · Claude estrutura automaticamente</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>⌘+Enter · Claude estrutura automaticamente</span>
           <button
             onClick={handleAdd}
             disabled={loading || !input.trim()}
@@ -322,7 +322,7 @@ export default function Pipeline() {
               {!fetching && (
                 <div className="flex flex-col gap-2">
                   {byStage(col.key).length === 0 && (
-                    <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.1)', textAlign: 'center', marginTop: '1.5rem' }}>vazio</div>
+                    <div style={{ fontSize: '0.68rem', color: 'var(--text-ter)', textAlign: 'center', marginTop: '1.5rem' }}>vazio</div>
                   )}
                   {byStage(col.key).map(l => (
                     <div
@@ -331,9 +331,9 @@ export default function Pipeline() {
                       style={{ ...innerCard, padding: '0.65rem', cursor: 'pointer' }}
                       className="hover:border-[#4a7fa5]/20 hover:bg-[#1e3350]/30 transition-all"
                     >
-                      <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.8)', fontWeight: 500, lineHeight: 1.3, marginBottom: '0.2rem' }}>{l.company}</div>
-                      {l.name && <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.3)', marginBottom: '0.4rem' }}>{l.name}</div>}
-                      {l.notes && <div style={{ fontSize: '0.62rem', color: 'rgba(255,255,255,.22)', lineHeight: 1.4, marginBottom: '0.4rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.notes}</div>}
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-sec)', fontWeight: 500, lineHeight: 1.3, marginBottom: '0.2rem' }}>{l.company}</div>
+                      {l.name && <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)', marginBottom: '0.4rem' }}>{l.name}</div>}
+                      {l.notes && <div style={{ fontSize: '0.62rem', color: 'var(--text-ter)', lineHeight: 1.4, marginBottom: '0.4rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{l.notes}</div>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         {l.follow_up_at && <span style={{ fontSize: '0.58rem', color: 'rgba(245,158,11,.55)' }}>📅 {new Date(l.follow_up_at + 'T00:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' })}</span>}
                         {l.mrr_est > 0 && <span style={{ fontSize: '0.58rem', color: 'rgba(122,170,74,.55)' }}>R${l.mrr_est.toLocaleString('pt-BR')}</span>}

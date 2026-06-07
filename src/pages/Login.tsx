@@ -4,7 +4,7 @@ export default function Login() {
   const { loginWithGoogle } = useAuth();
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: '#0b1520' }}>
+    <div className="w-full min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: 'var(--bg-base)' }}>
 
       {/* Glow de fundo */}
       <div style={{
@@ -37,12 +37,12 @@ export default function Login() {
         {/* Card de login */}
         <div style={{
           width: '100%', padding: '2rem',
-          background: 'rgba(30,51,80,.4)',
-          border: '1px solid rgba(74,127,165,.15)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-card)',
           borderRadius: 8,
           backdropFilter: 'blur(8px)',
         }}>
-          <p style={{ color: 'rgba(255,255,255,.45)', fontSize: '0.82rem', textAlign: 'center', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-ter)', fontSize: '0.82rem', textAlign: 'center', marginBottom: '1.5rem', lineHeight: 1.6 }}>
             Workspace interno da equipe Reveny
           </p>
 
@@ -69,7 +69,7 @@ export default function Login() {
           </button>
         </div>
 
-        <p style={{ color: 'rgba(255,255,255,.15)', fontSize: '0.68rem', marginTop: '1.5rem', letterSpacing: '0.04em' }}>
+        <p style={{ color: 'var(--text-ter)', fontSize: '0.68rem', marginTop: '1.5rem', letterSpacing: '0.04em' }}>
           Acesso restrito · Reveny © 2026
         </p>
       </div>

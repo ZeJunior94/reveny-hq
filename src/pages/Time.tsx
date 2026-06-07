@@ -9,8 +9,8 @@ const PROXY = (
 interface Admin { id: string; email: string; added_by: string; created_at: string; }
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
+const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
 const ACCENT = '#7aaec7';
 
 export default function Time() {
@@ -80,13 +80,13 @@ export default function Time() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
           Time
         </h1>
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
           Gerencie quem tem acesso ao Reveny HQ
         </p>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
 
       {/* Feedback */}
@@ -103,16 +103,16 @@ export default function Time() {
 
       {/* Lista de admins */}
       <div style={{ ...card, overflow: 'hidden', marginBottom: '1.5rem' }}>
-        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid rgba(74,127,165,.08)' }}>
+        <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-inner)' }}>
           <span style={dimLabel}>Acesso atual — {admins.length} {admins.length === 1 ? 'pessoa' : 'pessoas'}</span>
         </div>
 
         {loading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: '0.82rem' }}>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-ter)', fontSize: '0.82rem' }}>
             Carregando...
           </div>
         ) : admins.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,.2)', fontSize: '0.82rem' }}>
+          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-ter)', fontSize: '0.82rem' }}>
             Nenhum admin cadastrado.
           </div>
         ) : (
@@ -125,7 +125,7 @@ export default function Time() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '0.85rem 1rem',
-                  borderBottom: i < admins.length - 1 ? '1px solid rgba(74,127,165,.06)' : 'none',
+                  borderBottom: i < admins.length - 1 ? '1px solid var(--border-inner)' : 'none',
                 }}
               >
                 {/* Avatar */}
@@ -142,7 +142,7 @@ export default function Time() {
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.8)', fontWeight: 500 }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-sec)', fontWeight: 500 }}>
                       {a.email}
                     </span>
                     {isMe && (
@@ -155,7 +155,7 @@ export default function Time() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.2)', marginTop: 1 }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-ter)', marginTop: 1 }}>
                     Adicionado em {date} · por {a.added_by}
                   </div>
                 </div>
@@ -193,8 +193,8 @@ export default function Time() {
             required
             style={{
               flex: 1, padding: '0.55rem 0.85rem',
-              background: 'rgba(17,30,48,.9)', border: '1px solid rgba(74,127,165,.2)',
-              borderRadius: 6, color: 'rgba(255,255,255,.8)', fontSize: '0.85rem', outline: 'none',
+              background: 'var(--input-bg)', border: '1px solid var(--input-border)',
+              borderRadius: 6, color: 'var(--text-sec)', fontSize: '0.85rem', outline: 'none',
             }}
           />
           <button
@@ -209,7 +209,7 @@ export default function Time() {
             {adding ? '...' : '+ Adicionar'}
           </button>
         </form>
-        <p style={{ marginTop: '0.6rem', fontSize: '0.72rem', color: 'rgba(255,255,255,.2)' }}>
+        <p style={{ marginTop: '0.6rem', fontSize: '0.72rem', color: 'var(--text-ter)' }}>
           A pessoa precisa ter uma conta Google vinculada a esse e-mail no Supabase.
         </p>
       </div>

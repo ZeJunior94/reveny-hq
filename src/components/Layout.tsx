@@ -28,10 +28,10 @@ export default function Layout() {
       </div>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto bg-[#0b1520] min-w-0">
+      <main className="flex-1 overflow-y-auto min-w-0" style={{ background: 'var(--bg-base)' }}>
 
         {/* Hamburger — só mobile */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-[#4a7fa5]/10 sticky top-0 z-20 bg-[#0b1520]">
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-[#4a7fa5]/10 sticky top-0 z-20" style={{ background: 'var(--bg-base)' }}>
           <button
             onClick={() => setOpen(true)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.5)', padding: 4, display: 'flex', alignItems: 'center' }}

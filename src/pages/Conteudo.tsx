@@ -22,11 +22,11 @@ const PLACEHOLDERS: Record<Platform, string> = {
 const FILTER_LABELS: Record<PostStatus | 'todos', string> = { todos: 'Todos', rascunho: 'Rascunho', pronto: 'Pronto', publicado: 'Publicado' };
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'rgba(17,30,48,.7)', border: '1px solid rgba(74,127,165,.12)', borderRadius: 8 };
-const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em' };
+const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
+const sectionLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.18em' };
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'var(--skel-bg)' }} />;
 }
 
 export default function Conteudo() {
@@ -109,22 +109,22 @@ export default function Conteudo() {
       <div className="mb-8">
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+            <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
               Conteúdo & LinkedIn
             </h1>
-            <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
               Calendário editorial
             </p>
           </div>
           <div style={{ display: 'flex', gap: 16 }}>
             {(['linkedin', 'tweet', 'story'] as Platform[]).map(p => (
-              <span key={p} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)' }}>
+              <span key={p} style={{ fontSize: '0.72rem', color: 'var(--text-ter)' }}>
                 <span style={{ ...jakarta, fontWeight: 800, color: PLATFORM_COLORS[p] }}>{postsByPlatform(p)}</span>{' '}{PLATFORM_LABELS[p]}
               </span>
             ))}
           </div>
         </div>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-4 md:gap-6">
@@ -133,7 +133,7 @@ export default function Conteudo() {
           {/* Input */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
             <div style={{ ...sectionLabel, color: `${PLATFORM_COLORS[platform]}99`, marginBottom: '0.85rem' }}>● Gerar post</div>
-            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
 
             <div style={{ display: 'flex', gap: 6, marginBottom: '1rem' }}>
               {(['linkedin', 'tweet', 'story'] as Platform[]).map(p => (
@@ -151,10 +151,10 @@ export default function Conteudo() {
               placeholder={PLACEHOLDERS[platform]}
               rows={3}
               className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed"
-              style={{ background: 'rgba(11,21,32,.3)', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,.8)', fontSize: '0.82rem', resize: 'none', width: '100%', outline: 'none', lineHeight: 1.6 }}
+              style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.65rem 0.85rem', color: 'var(--text-sec)', fontSize: '0.82rem', resize: 'none', width: '100%', outline: 'none', lineHeight: 1.6 }}
             />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-              <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.2)' }}>voz: direto, sem hype, founder real</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--text-ter)' }}>voz: direto, sem hype, founder real</span>
               <button
                 onClick={handleGenerate}
                 disabled={loading || !input.trim()}
@@ -176,8 +176,8 @@ export default function Conteudo() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '1rem' }}>
             {(['todos', 'rascunho', 'pronto', 'publicado'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)} style={filter === f
-                ? { background: 'rgba(74,127,165,.15)', color: 'rgba(255,255,255,.85)', border: '1px solid rgba(74,127,165,.25)', fontSize: '0.72rem', fontWeight: 500, padding: '0.3rem 0.75rem', borderRadius: 6, cursor: 'pointer' }
-                : { border: '1px solid rgba(74,127,165,.08)', color: 'rgba(255,255,255,.3)', fontSize: '0.72rem', padding: '0.3rem 0.75rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }
+                ? { background: 'rgba(74,127,165,.15)', color: 'var(--text-pri)', border: '1px solid rgba(74,127,165,.25)', fontSize: '0.72rem', fontWeight: 500, padding: '0.3rem 0.75rem', borderRadius: 6, cursor: 'pointer' }
+                : { border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.72rem', padding: '0.3rem 0.75rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }
               }>{FILTER_LABELS[f]}</button>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default function Conteudo() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
             <span style={sectionLabel}>Posts</span>
             {!fetching && posts.length > 0 && (
-              <button onClick={clearAll} style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.25)', background: 'transparent', border: '1px solid rgba(74,127,165,.1)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>limpar tudo</button>
+              <button onClick={clearAll} style={{ fontSize: '0.68rem', color: 'var(--text-sec)', background: 'transparent', border: '1px solid var(--border-main)', borderRadius: 6, padding: '0.25rem 0.65rem', cursor: 'pointer' }}>limpar tudo</button>
             )}
           </div>
 
@@ -201,21 +201,21 @@ export default function Conteudo() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.18)', padding: '1rem 0' }}>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-ter)', padding: '1rem 0' }}>
               {posts.length === 0 ? 'Nenhum post ainda.' : 'Nenhum post nessa categoria.'}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               {filtered.map(p => (
                 <button key={p.id} onClick={() => setSelected(p)} className="text-left transition-all" style={selected?.id === p.id
-                  ? { background: 'rgba(17,30,48,.9)', border: '1px solid rgba(74,127,165,.25)', borderRadius: 8, padding: '1rem' }
+                  ? { background: 'var(--bg-inner)', border: '1px solid rgba(74,127,165,.25)', borderRadius: 8, padding: '1rem' }
                   : { ...card, padding: '1rem' }
                 }>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.4rem' }}>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, color: PLATFORM_COLORS[p.platform] }}>{PLATFORM_LABELS[p.platform]}</span>
                     <span style={{ fontSize: '0.62rem', color: STATUS_COLORS[p.status], background: `${STATUS_COLORS[p.status]}15`, padding: '0.1rem 0.4rem', borderRadius: 4 }}>{p.status}</span>
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.45)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.content}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.content}</div>
                 </button>
               ))}
             </div>
@@ -230,22 +230,22 @@ export default function Conteudo() {
                 <span style={{ fontSize: '0.72rem', fontWeight: 600, color: PLATFORM_COLORS[selected.platform] }}>{PLATFORM_LABELS[selected.platform]}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <select value={selected.status} onChange={e => updateStatus(selected.id, e.target.value as PostStatus)}
-                    style={{ background: 'rgba(11,21,32,.8)', color: 'rgba(255,255,255,.4)', fontSize: '0.65rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.4rem' }}>
+                    style={{ background: 'var(--input-bg)', color: 'var(--text-sec)', fontSize: '0.65rem', border: 'none', cursor: 'pointer', borderRadius: 4, padding: '0.15rem 0.4rem' }}>
                     <option value="rascunho">rascunho</option>
                     <option value="pronto">pronto</option>
                     <option value="publicado">publicado</option>
                   </select>
-                  <button onClick={() => handleCopy(selected.id, selected.content)} style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-white/60 transition-colors">
+                  <button onClick={() => handleCopy(selected.id, selected.content)} style={{ fontSize: '0.72rem', color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-white/60 transition-colors">
                     {copied === selected.id ? '✓ copiado' : 'copiar'}
                   </button>
-                  <button onClick={() => deletePost(selected.id)} style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,.15)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors">×</button>
+                  <button onClick={() => deletePost(selected.id)} style={{ fontSize: '0.9rem', color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors">×</button>
                 </div>
               </div>
-              {selected.topic && <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.2)', marginBottom: '0.85rem' }}>tema: {selected.topic}</div>}
-              <p style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.65)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{selected.content}</p>
+              {selected.topic && <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)', marginBottom: '0.85rem' }}>tema: {selected.topic}</div>}
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-sec)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{selected.content}</p>
               {selected.platform === 'tweet' && (
-                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
-                  <span style={{ fontSize: '0.65rem', color: selected.content.length > 280 ? '#f87171' : 'rgba(255,255,255,.2)' }}>
+                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-main)' }}>
+                  <span style={{ fontSize: '0.65rem', color: selected.content.length > 280 ? '#f87171' : 'var(--text-ter)' }}>
                     {selected.content.length}/280 chars
                   </span>
                 </div>
@@ -253,7 +253,7 @@ export default function Conteudo() {
             </div>
           ) : (
             <div style={{ ...card, padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 220 }}>
-              <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,.15)' }}>Selecione um post</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-ter)' }}>Selecione um post</span>
             </div>
           )}
         </div>

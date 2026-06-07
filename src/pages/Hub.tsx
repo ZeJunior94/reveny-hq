@@ -54,7 +54,7 @@ const AGENTS = [
 ];
 
 function Skel({ className }: { className?: string }) {
-  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'rgba(74,127,165,.08)' }} />;
+  return <div className={`rounded animate-pulse ${className ?? ''}`} style={{ background: 'var(--skel-bg)' }} />;
 }
 
 function fmtMrr(n: number) {
@@ -144,8 +144,8 @@ export default function Hub() {
           <div
             key={stat.label}
             style={{
-              background: 'rgba(17,30,48,.7)',
-              border: '1px solid rgba(74,127,165,.12)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-card)',
               borderLeft: `3px solid ${stat.color}`,
               borderRadius: 8,
               padding: '1.25rem 1rem',
@@ -159,13 +159,13 @@ export default function Hub() {
               </>
             ) : (
               <>
-                <div style={{ ...jakarta, fontWeight: 800, fontSize: '2rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1, marginBottom: '0.4rem' }}>
+                <div style={{ ...jakarta, fontWeight: 800, fontSize: '2rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1, marginBottom: '0.4rem' }}>
                   {stat.value ?? '—'}
                 </div>
                 <div style={{ fontSize: '0.7rem', fontWeight: 600, color: stat.color, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
                   {stat.label}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.3)' }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)' }}>
                   {stat.sub ?? '—'}
                 </div>
               </>
@@ -175,7 +175,7 @@ export default function Hub() {
       </div>
 
       {/* ── Agent grid ── */}
-      <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: '0.85rem' }}>
+      <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: '0.85rem' }}>
         Agentes
       </div>
 
@@ -186,18 +186,18 @@ export default function Hub() {
             onClick={() => navigate(a.path)}
             className="text-left transition-all group"
             style={{
-              background: 'rgba(17,30,48,.6)',
-              border: '1px solid rgba(74,127,165,.1)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-card)',
               borderRadius: 8,
               padding: '1.25rem',
             }}
             onMouseOver={e => {
               (e.currentTarget as HTMLElement).style.border = `1px solid rgba(74,127,165,.3)`;
-              (e.currentTarget as HTMLElement).style.background = 'rgba(30,51,80,.5)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg-inner)';
             }}
             onMouseOut={e => {
-              (e.currentTarget as HTMLElement).style.border = '1px solid rgba(74,127,165,.1)';
-              (e.currentTarget as HTMLElement).style.background = 'rgba(17,30,48,.6)';
+              (e.currentTarget as HTMLElement).style.border = '1px solid var(--border-card)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)';
             }}
           >
             <div className="flex items-start justify-between mb-3.5">
@@ -220,10 +220,10 @@ export default function Hub() {
               />
             </div>
 
-            <div style={{ ...jakarta, fontWeight: 700, fontSize: '0.88rem', color: 'rgba(255,255,255,.9)', marginBottom: '0.3rem' }}>
+            <div style={{ ...jakarta, fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-pri)', marginBottom: '0.3rem' }}>
               {a.label}
             </div>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.35)', lineHeight: 1.6, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-ter)', lineHeight: 1.6, marginBottom: '1rem' }}>
               {a.desc}
             </p>
 
@@ -245,11 +245,11 @@ export default function Hub() {
       </div>
 
       {/* ── Atividade recente ── */}
-      <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'rgba(74,127,165,.6)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: '0.85rem' }}>
+      <div style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: '0.85rem' }}>
         Atividade recente
       </div>
-      <div style={{ background: 'rgba(17,30,48,.4)', border: '1px solid rgba(74,127,165,.08)', borderRadius: 8, padding: '1.25rem' }}>
-        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.18)' }}>Nenhuma atividade ainda.</p>
+      <div style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 8, padding: '1.25rem' }}>
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-ter)' }}>Nenhuma atividade ainda.</p>
       </div>
     </div>
   );

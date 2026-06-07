@@ -86,8 +86,8 @@ export default function Contexto() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: 'rgba(17,30,48,.6)', border: '1px solid rgba(74,127,165,.12)',
-    borderRadius: 6, padding: '0.65rem 0.85rem', color: 'rgba(255,255,255,.75)',
+    width: '100%', background: 'var(--bg-inner)', border: '1px solid var(--border-inner)',
+    borderRadius: 6, padding: '0.65rem 0.85rem', color: 'var(--text-sec)',
     fontSize: '0.82rem', fontFamily: 'monospace', lineHeight: 1.6, resize: 'none',
     outline: 'none', transition: 'border-color .15s',
   };
@@ -96,13 +96,13 @@ export default function Contexto() {
     <div className="p-4 md:p-8 max-w-2xl">
       {/* Header */}
       <div className="mb-8">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'white', lineHeight: 1.1 }}>
+        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
           Contexto da Reveny
         </h1>
-        <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,.3)', marginTop: '0.3rem' }}>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
           DNA injetado em todos os agentes
         </p>
-        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid rgba(74,127,165,.1)' }} />
+        <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
 
       {/* Agent chips */}
@@ -113,7 +113,7 @@ export default function Contexto() {
             color: a.color, background: `${a.color}18`, border: `1px solid ${a.color}30`,
           }}>{a.label}</span>
         ))}
-        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,.2)', marginLeft: 4 }}>
+        <span style={{ fontSize: '0.72rem', color: 'var(--text-ter)', marginLeft: 4 }}>
           recebem este contexto a cada chamada
         </span>
       </div>
@@ -123,8 +123,8 @@ export default function Contexto() {
         <div className="flex flex-col gap-5">
           {DNA_SECTIONS.map(s => (
             <div key={s.key}>
-              <div style={{ height: 12, width: 128, background: 'rgba(74,127,165,.08)', borderRadius: 4, marginBottom: 8, animation: 'pulse 1.5s infinite' }} />
-              <div style={{ height: 80, background: 'rgba(74,127,165,.08)', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
+              <div style={{ height: 12, width: 128, background: 'var(--skel-bg)', borderRadius: 4, marginBottom: 8, animation: 'pulse 1.5s infinite' }} />
+              <div style={{ height: 80, background: 'var(--skel-bg)', borderRadius: 6, animation: 'pulse 1.5s infinite' }} />
             </div>
           ))}
         </div>
@@ -133,8 +133,8 @@ export default function Contexto() {
           {DNA_SECTIONS.map(s => (
             <div key={s.key}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.5rem' }}>
-                <label style={{ fontSize: '0.78rem', fontWeight: 500, color: 'rgba(255,255,255,.6)' }}>{s.label}</label>
-                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.2)' }}>{s.hint}</span>
+                <label style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-sec)' }}>{s.label}</label>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>{s.hint}</span>
                 {sections[s.key] !== original[s.key] && (
                   <span style={{ fontSize: '0.62rem', color: 'rgba(251,191,36,.6)', marginLeft: 'auto' }}>● editado</span>
                 )}
@@ -147,7 +147,7 @@ export default function Contexto() {
                 style={inputStyle}
                 placeholder={`${s.label}...`}
                 onFocus={e => (e.target.style.borderColor = 'rgba(74,127,165,.35)')}
-                onBlur={e => (e.target.style.borderColor = 'rgba(74,127,165,.12)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--border-inner)')}
               />
             </div>
           ))}
@@ -159,8 +159,8 @@ export default function Contexto() {
       )}
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(74,127,165,.1)' }}>
-        <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,.18)', maxWidth: 280, lineHeight: 1.5 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-main)' }}>
+        <p style={{ fontSize: '0.7rem', color: 'var(--text-ter)', maxWidth: 280, lineHeight: 1.5 }}>
           Alterações entram em vigor na próxima chamada de qualquer agente.
         </p>
         <button
@@ -168,7 +168,7 @@ export default function Contexto() {
           disabled={!dirty || saving}
           style={{
             background: dirty && !saving ? '#4a7fa5' : 'rgba(74,127,165,.2)',
-            color: dirty && !saving ? 'white' : 'rgba(255,255,255,.3)',
+            color: dirty && !saving ? 'white' : 'var(--text-ter)',
             fontSize: '0.78rem', fontWeight: 600, padding: '0.55rem 1.25rem',
             borderRadius: 6, border: 'none', cursor: dirty && !saving ? 'pointer' : 'not-allowed', transition: 'all .15s',
           }}
