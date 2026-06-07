@@ -205,12 +205,24 @@ export default function Produto() {
 
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function applyBugJson() {
-    try {
-      const match = rawJson.match(/\{[\s\S]*\}/);
-      if (!match) throw new Error();
-      const p = JSON.parse(match[0]);
+    const attempt = (str: string) => {
+      const p = JSON.parse(str);
       setBugForm({ sintoma: p.sintoma ?? '', causa: p.causa ?? '', arquivo: p.arquivo ?? '', correcao: p.correcao ?? '', como_testar: p.como_testar ?? '' });
       setRawJson('');
+    };
+    try { attempt(rawJson.trim()); return; } catch { /* try extraction */ }
+    try {
+      // extract outermost balanced braces
+      const start = rawJson.indexOf('{');
+      if (start === -1) throw new Error('no opening brace');
+      let depth = 0, end = -1;
+      for (let i = start; i < rawJson.length; i++) {
+        const ch = rawJson[i];
+        if (ch === '{') depth++;
+        else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
+      }
+      if (end === -1) throw new Error('no closing brace');
+      attempt(rawJson.slice(start, end + 1));
     } catch { alert('JSON inválido — cole o bloco completo gerado pelo Claude Code.'); }
   }
 
