@@ -204,46 +204,53 @@ export default function Produto() {
   }
 
   // ── Bugs actions ─────────────────────────────────────────────────────────
-  function applyBugJson() {
-    // normalize smart quotes and zero-width chars that break JSON.parse
+  function parseJsonBug(raw: string): BugForm | null {
     const sanitize = (s: string) => s
-      .replace(/[‘’]/g, "'")
-      .replace(/[“”]/g, '"')
-      .replace(/[​﻿]/g, '')
-      .trim();
+      .replace(/[‘’]/g, “’”).replace(/[“”]/g, ‘”’).replace(/[​﻿​﻿]/g, ‘’).trim();
+    const clean = sanitize(raw);
 
-    const apply = (str: string) => {
-      const p = JSON.parse(str);
-      setBugForm({ sintoma: p.sintoma ?? '', causa: p.causa ?? '', arquivo: p.arquivo ?? '', correcao: p.correcao ?? '', como_testar: p.como_testar ?? '' });
-      setRawJson('');
+    const extract = (s: string): string => {
+      const start = s.indexOf(‘{‘);
+      if (start === -1) return s;
+      let depth = 0, end = -1, inStr = false, esc = false;
+      for (let i = start; i < s.length; i++) {
+        const ch = s[i];
+        if (esc) { esc = false; continue; }
+        if (ch === ‘\\’ && inStr) { esc = true; continue; }
+        if (ch === ‘”’) { inStr = !inStr; continue; }
+        if (!inStr) { if (ch === ‘{‘) depth++; else if (ch === ‘}’) { depth--; if (depth === 0) { end = i; break; } } }
+      }
+      return end !== -1 ? s.slice(start, end + 1) : s;
     };
 
-    const clean = sanitize(rawJson);
-
-    // 1. try direct parse
-    try { apply(clean); return; } catch { /* fall through */ }
-
-    // 2. extract via balanced-brace scan (handles {placeholders} inside strings)
     try {
-      const start = clean.indexOf('{');
-      if (start === -1) throw new Error();
-      let depth = 0, end = -1, inStr = false, esc = false;
-      for (let i = start; i < clean.length; i++) {
-        const ch = clean[i];
-        if (esc) { esc = false; continue; }
-        if (ch === '\\' && inStr) { esc = true; continue; }
-        if (ch === '"') { inStr = !inStr; continue; }
-        if (!inStr) {
-          if (ch === '{') depth++;
-          else if (ch === '}') { depth--; if (depth === 0) { end = i; break; } }
-        }
-      }
-      if (end === -1) throw new Error();
-      apply(clean.slice(start, end + 1));
-    } catch (e) {
-      console.error('[applyBugJson]', e, '\nInput:', clean.slice(0, 200));
-      alert('JSON inválido — cole o bloco completo gerado pelo Claude Code.');
-    }
+      const p = JSON.parse(extract(clean));
+      if (!p.sintoma || !p.causa || !p.correcao) return null;
+      return { sintoma: p.sintoma, causa: p.causa, arquivo: p.arquivo ?? ‘’, correcao: p.correcao, como_testar: p.como_testar ?? ‘’ };
+    } catch { return null; }
+  }
+
+  async function handleBugJsonSave() {
+    const parsed = parseJsonBug(rawJson);
+    if (!parsed) { alert(‘JSON inválido — verifique se copiou o bloco completo.’); return; }
+    setBugSaving(true);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/bugs`, {
+        method: ‘POST’, headers: authH, body: JSON.stringify(parsed),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      setBugs(prev => [data.bug, ...prev]);
+      setRawJson(‘’);
+    } catch (err) { console.error(‘[bugs/json-save]’, err); alert(‘Erro ao salvar.’); }
+    finally { setBugSaving(false); }
+  }
+
+  function applyBugJson() {
+    const parsed = parseJsonBug(rawJson);
+    if (!parsed) { alert(‘JSON inválido — verifique se copiou o bloco completo.’); return; }
+    setBugForm(parsed);
+    setRawJson(‘’);
   }
 
   async function handleBugSave() {
@@ -461,9 +468,9 @@ export default function Produto() {
       {/* ── TAB: Bugs ─────────────────────────────────────────────── */}
       {tab === 'bugs' && (
         <div className="max-w-3xl">
-          {/* Cole JSON */}
+          {/* Cole JSON — salva direto */}
           <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
-            <div style={{ ...dimLabel, color: 'rgba(239,68,68,.7)', marginBottom: '0.85rem' }}>● Cole o JSON do Claude Code</div>
+            <div style={{ ...dimLabel, color: 'rgba(239,68,68,.7)', marginBottom: '0.85rem' }}>● Cole o JSON do Claude Code e registre com um clique</div>
             <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
             <textarea
               value={rawJson}
@@ -472,9 +479,12 @@ export default function Produto() {
               rows={5}
               className="w-full bg-transparent text-white/70 text-xs placeholder-white/15 focus:outline-none resize-none leading-relaxed font-mono"
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
-              <button onClick={applyBugJson} disabled={!rawJson.trim()} style={{ background: 'rgba(239,68,68,.15)', color: '#f87171', border: '1px solid rgba(239,68,68,.25)', fontSize: '0.75rem', fontWeight: 600, padding: '0.4rem 0.9rem', borderRadius: 6, cursor: 'pointer', opacity: !rawJson.trim() ? 0.4 : 1 }}>
-                Preencher campos →
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+              <button onClick={applyBugJson} disabled={!rawJson.trim()} style={{ background: 'none', color: 'rgba(255,255,255,.3)', border: 'none', fontSize: '0.72rem', cursor: 'pointer', opacity: !rawJson.trim() ? 0.3 : 1 }}>
+                preencher campos ↓
+              </button>
+              <button onClick={handleBugJsonSave} disabled={bugSaving || !rawJson.trim()} style={{ background: '#f87171', color: 'white', border: 'none', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1.1rem', borderRadius: 6, cursor: 'pointer', opacity: bugSaving || !rawJson.trim() ? 0.4 : 1 }}>
+                {bugSaving ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />Salvando...</span> : 'Registrar JSON →'}
               </button>
             </div>
           </div>
