@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PROXY = (
@@ -8,6 +8,14 @@ const PROXY = (
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Status = 'ideia' | 'aprovada' | 'building' | 'done';
+type Tab    = 'backlog' | 'builder' | 'bugs';
+
+interface Bug {
+  id: string; sintoma: string; causa: string; arquivo: string | null;
+  correcao: string; como_testar: string | null; created_at: string;
+}
+interface BugForm { sintoma: string; causa: string; arquivo: string; correcao: string; como_testar: string; }
+const EMPTY_BUG: BugForm = { sintoma: '', causa: '', arquivo: '', correcao: '', como_testar: '' };
 
 interface Feature {
   id: string; title: string; description: string;
@@ -50,7 +58,7 @@ function IceBadge({ ice }: { ice: number }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Produto() {
   const { token } = useAuth();
-  const [tab, setTab] = useState<'backlog' | 'builder'>('backlog');
+  const [tab, setTab] = useState<Tab>('backlog');
 
   // Shared: features (used in both tabs)
   const [features,  setFeatures]  = useState<Feature[]>([]);
@@ -71,6 +79,16 @@ export default function Produto() {
   const [prdFetched, setPrdFetched] = useState(false);
   const builderFetchedRef = useRef(false);
 
+  // Bugs tab
+  const [bugs,       setBugs]       = useState<Bug[]>([]);
+  const [bugForm,    setBugForm]    = useState<BugForm>(EMPTY_BUG);
+  const [rawJson,    setRawJson]    = useState('');
+  const [bugSaving,  setBugSaving]  = useState(false);
+  const [bugSearch,  setBugSearch]  = useState('');
+  const [bugExpanded, setBugExpanded] = useState<string | null>(null);
+  const [bugsFetched, setBugsFetched] = useState(false);
+  const bugsFetchedRef = useRef(false);
+
   const authH = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
   const byStatus = (s: Status) => features.filter(f => f.status === s);
   const approved = features.filter(f => f.status === 'aprovada');
@@ -83,6 +101,25 @@ export default function Produto() {
       .finally(() => setFetching(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch bugs when Bugs tab is first opened
+  const fetchBugs = useCallback(async () => {
+    if (!token) return;
+    try {
+      const r = await fetch(`${PROXY}/api/hq/bugs`, { headers: authH });
+      if (!r.ok) throw new Error(await r.text());
+      const { bugs: data } = await r.json();
+      setBugs(data ?? []);
+    } catch (err) { console.error('[bugs]', err); }
+    finally { setBugsFetched(true); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  useEffect(() => {
+    if (tab !== 'bugs' || bugsFetchedRef.current) return;
+    bugsFetchedRef.current = true;
+    fetchBugs();
+  }, [tab, fetchBugs]);
 
   // Fetch PRDs when Builder tab is first opened
   useEffect(() => {
@@ -166,15 +203,56 @@ export default function Produto() {
     await Promise.all(ids.map(id => fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authH })));
   }
 
+  // ── Bugs actions ─────────────────────────────────────────────────────────
+  function applyBugJson() {
+    try {
+      const match = rawJson.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error();
+      const p = JSON.parse(match[0]);
+      setBugForm({ sintoma: p.sintoma ?? '', causa: p.causa ?? '', arquivo: p.arquivo ?? '', correcao: p.correcao ?? '', como_testar: p.como_testar ?? '' });
+      setRawJson('');
+    } catch { alert('JSON inválido — cole o bloco completo gerado pelo Claude Code.'); }
+  }
+
+  async function handleBugSave() {
+    if (!bugForm.sintoma.trim() || !bugForm.causa.trim() || !bugForm.correcao.trim()) return;
+    setBugSaving(true);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/bugs`, {
+        method: 'POST', headers: authH, body: JSON.stringify(bugForm),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error);
+      setBugs(prev => [data.bug, ...prev]);
+      setBugForm(EMPTY_BUG);
+    } catch (err) { console.error('[bugs/save]', err); }
+    finally { setBugSaving(false); }
+  }
+
+  async function handleBugDelete(id: string) {
+    if (!confirm('Remover este registro?')) return;
+    await fetch(`${PROXY}/api/hq/bugs/${id}`, { method: 'DELETE', headers: authH });
+    setBugs(prev => prev.filter(b => b.id !== id));
+    if (bugExpanded === id) setBugExpanded(null);
+  }
+
   function handleCopy(text: string) {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
 
-  const TABS: { id: 'backlog' | 'builder'; label: string }[] = [
-    { id: 'backlog',  label: 'Backlog'  },
-    { id: 'builder',  label: 'Builder'  },
+  const filteredBugs = bugs.filter(b => {
+    if (!bugSearch) return true;
+    const q = bugSearch.toLowerCase();
+    return b.sintoma.toLowerCase().includes(q) || b.causa.toLowerCase().includes(q) || (b.arquivo ?? '').toLowerCase().includes(q) || b.correcao.toLowerCase().includes(q);
+  });
+  const canSaveBug = bugForm.sintoma.trim() && bugForm.causa.trim() && bugForm.correcao.trim();
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'backlog', label: 'Backlog' },
+    { id: 'builder', label: 'Builder' },
+    { id: 'bugs',    label: 'Bugs'    },
   ];
 
   return (
@@ -346,6 +424,109 @@ export default function Produto() {
             </div>
           </div>
         </>
+      )}
+
+      {/* ── TAB: Bugs ─────────────────────────────────────────────── */}
+      {tab === 'bugs' && (
+        <div className="max-w-3xl">
+          {/* Cole JSON */}
+          <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+            <div style={{ ...dimLabel, color: 'rgba(239,68,68,.7)', marginBottom: '0.85rem' }}>● Cole o JSON do Claude Code</div>
+            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1rem' }} />
+            <textarea
+              value={rawJson}
+              onChange={e => setRawJson(e.target.value)}
+              placeholder={'{\n  "sintoma": "...",\n  "causa": "...",\n  "arquivo": "...",\n  "correcao": "...",\n  "como_testar": "..."\n}'}
+              rows={5}
+              className="w-full bg-transparent text-white/70 text-xs placeholder-white/15 focus:outline-none resize-none leading-relaxed font-mono"
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+              <button onClick={applyBugJson} disabled={!rawJson.trim()} style={{ background: 'rgba(239,68,68,.15)', color: '#f87171', border: '1px solid rgba(239,68,68,.25)', fontSize: '0.75rem', fontWeight: 600, padding: '0.4rem 0.9rem', borderRadius: 6, cursor: 'pointer', opacity: !rawJson.trim() ? 0.4 : 1 }}>
+                Preencher campos →
+              </button>
+            </div>
+          </div>
+
+          {/* Formulário */}
+          <div style={{ ...card, padding: '1.25rem', marginBottom: '2rem' }}>
+            <div style={{ ...dimLabel, marginBottom: '0.85rem' }}>● Registro do bug</div>
+            <div style={{ borderBottom: '1px solid rgba(74,127,165,.08)', marginBottom: '1.1rem' }} />
+            <div className="flex flex-col gap-3">
+              {([
+                { key: 'sintoma',     label: 'Sintoma',     placeholder: 'O que o usuário observou',  rows: 2 },
+                { key: 'causa',       label: 'Causa raiz',  placeholder: 'Por que o bug acontecia',   rows: 2 },
+                { key: 'arquivo',     label: 'Arquivo',     placeholder: 'caminho/do/arquivo.ts',      rows: 1 },
+                { key: 'correcao',    label: 'Correção',    placeholder: 'O que foi feito',            rows: 2 },
+                { key: 'como_testar', label: 'Como testar', placeholder: 'Passo a passo mínimo',      rows: 2 },
+              ] as { key: keyof BugForm; label: string; placeholder: string; rows: number }[]).map(f => (
+                <div key={f.key}>
+                  <label style={{ ...dimLabel, display: 'block', marginBottom: '0.35rem' }}>{f.label}</label>
+                  {f.rows === 1
+                    ? <input value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm text-white/85 focus:outline-none placeholder-white/25" style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7 }} />
+                    : <textarea value={bugForm[f.key]} onChange={e => setBugForm(p => ({ ...p, [f.key]: e.target.value }))} rows={f.rows} placeholder={f.placeholder} className="w-full px-3 py-2 text-sm text-white/85 focus:outline-none placeholder-white/25 resize-none leading-relaxed" style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7 }} />
+                  }
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(74,127,165,.08)' }}>
+              <button onClick={handleBugSave} disabled={bugSaving || !canSaveBug} style={{ background: '#f87171', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.5rem 1.2rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: bugSaving || !canSaveBug ? 0.4 : 1 }}>
+                {bugSaving ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />Salvando...</span> : 'Registrar →'}
+              </button>
+            </div>
+          </div>
+
+          {/* Lista */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+            <span style={dimLabel}>Histórico ({bugs.length})</span>
+            <input value={bugSearch} onChange={e => setBugSearch(e.target.value)} placeholder="Buscar..." style={{ background: 'rgba(17,30,48,.8)', border: '1px solid rgba(74,127,165,.15)', borderRadius: 7, color: 'rgba(255,255,255,.7)', fontSize: '0.72rem', padding: '0.3rem 0.7rem', width: 180 }} className="focus:outline-none" />
+          </div>
+
+          {!bugsFetched && (
+            <div className="flex flex-col gap-2">{[1,2,3].map(i => <div key={i} style={{ ...card, padding: '1rem' }}><Skel className="h-3 w-3/4 mb-2" /><Skel className="h-2.5 w-full mb-1.5" /><Skel className="h-2.5 w-1/2" /></div>)}</div>
+          )}
+
+          {bugsFetched && filteredBugs.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem 0', color: 'rgba(255,255,255,.15)', fontSize: '0.8rem' }}>
+              {bugSearch ? 'Nenhum resultado.' : 'Nenhum bug registrado ainda.'}
+            </div>
+          )}
+
+          {bugsFetched && (
+            <div className="flex flex-col gap-2">
+              {filteredBugs.map(b => (
+                <div key={b.id} style={{ ...card, padding: '1rem 1.25rem', cursor: 'pointer' }} onClick={() => setBugExpanded(bugExpanded === b.id ? null : b.id)} className="hover:border-[#4a7fa5]/25 transition-all">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(255,255,255,.85)', lineHeight: 1.35, marginBottom: '0.2rem' }}>{b.sintoma}</div>
+                      {b.arquivo && <div style={{ fontSize: '0.65rem', color: 'rgba(122,174,199,.45)', fontFamily: 'monospace', marginBottom: '0.15rem' }}>{b.arquivo}</div>}
+                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.22)' }}>{new Date(b.created_at).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,.18)', flexShrink: 0, marginTop: 2 }}>{bugExpanded === b.id ? '▲' : '▼'}</span>
+                  </div>
+                  {bugExpanded === b.id && (
+                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(74,127,165,.08)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {([
+                        { label: 'Causa raiz', value: b.causa },
+                        { label: 'Correção',   value: b.correcao },
+                        b.como_testar ? { label: 'Como testar', value: b.como_testar } : null,
+                      ] as ({ label: string; value: string } | null)[]).filter(Boolean).map(f => (
+                        <div key={f!.label}>
+                          <div style={{ ...dimLabel, marginBottom: '0.25rem' }}>{f!.label}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,.55)', lineHeight: 1.6 }}>{f!.value}</div>
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.25rem' }}>
+                        <button onClick={e => { e.stopPropagation(); handleBugDelete(b.id); }} style={{ fontSize: '0.68rem', color: 'rgba(239,68,68,.35)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-red-400 transition-colors">
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* ── TAB: Builder ──────────────────────────────────────────── */}

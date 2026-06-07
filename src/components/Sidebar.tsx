@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  LayoutDashboard, Layers, TrendingUp, Users, PenLine, BookOpen, LogOut, Shield, Bug,
+  LayoutDashboard, Layers, TrendingUp, Users, PenLine, BookOpen, LogOut, Shield,
 } from 'lucide-react';
 
 const NAV = [
@@ -10,7 +10,6 @@ const NAV = [
   { path: '/pipeline', label: 'Pipeline', icon: TrendingUp,      color: '#f59e0b' },
   { path: '/carteira', label: 'Carteira', icon: Users,           color: '#7aaec7' },
   { path: '/conteudo', label: 'Conteúdo', icon: PenLine,         color: '#a78bfa' },
-  { path: '/bugs',     label: 'Bugs',     icon: Bug,             color: '#f87171' },
 ];
 
 const NAV_CONFIG = [
