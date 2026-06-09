@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PROXY = (
@@ -6,50 +6,161 @@ const PROXY = (
   || 'https://mailflow-seu-email-inteligente-production.up.railway.app'
 ).trim();
 
-type AgentId = 'pm' | 'arquiteto' | 'template';
-type Status  = 'idle' | 'streaming' | 'done' | 'error';
+type AgentType = 'hq' | 'template';
 
-const AGENTS: { id: AgentId; label: string; role: string; color: string }[] = [
-  { id: 'pm',        label: 'PM',              role: 'Valida alinhamento estratégico',    color: '#7aaec7' },
-  { id: 'arquiteto', label: 'Arquiteto',        role: 'Avalia viabilidade técnica',        color: '#f59e0b' },
-  { id: 'template',  label: 'Template Builder', role: 'Gera o HTML completo',             color: '#7aaa4a' },
-];
+interface Msg {
+  id: string;
+  role: 'user' | 'agent';
+  content: string;
+  agent?: AgentType;
+  streaming?: boolean;
+}
 
-const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
-const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
-const dimLabel: React.CSSProperties = { fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-dim)', textTransform: 'uppercase' as const, letterSpacing: '0.18em' };
+const AGENT: Record<AgentType, { label: string; color: string }> = {
+  hq:       { label: 'HQ',               color: '#7aaec7' },
+  template: { label: 'Template Builder', color: '#7aaa4a' },
+};
+
+const WELCOME: Msg = {
+  id: 'welcome',
+  role: 'agent',
+  agent: 'hq',
+  content: 'Olá! Pode falar sobre features, bugs, ideias ou qualquer coisa do produto. Quando quiser um template HTML, é só dizer **"cria o template"**.',
+};
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  }
+  return (
+    <button
+      onClick={copy}
+      style={{
+        fontSize: '0.68rem', color: copied ? '#7aaa4a' : 'var(--text-ter)',
+        background: 'none', border: 'none', cursor: 'pointer', transition: 'color .2s',
+      }}
+    >
+      {copied ? '✓ copiado' : 'copiar HTML'}
+    </button>
+  );
+}
+
+function Bubble({ msg }: { msg: Msg }) {
+  const isUser = msg.role === 'user';
+  const meta   = msg.agent ? AGENT[msg.agent] : AGENT.hq;
+  const isTemplate = msg.agent === 'template' && !msg.streaming && msg.content.trim().startsWith('<');
+
+  if (isUser) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{
+          maxWidth: '72%',
+          background: 'rgba(74,127,165,.15)',
+          border: '1px solid rgba(74,127,165,.2)',
+          borderRadius: '12px 12px 3px 12px',
+          padding: '0.65rem 0.9rem',
+          fontSize: '0.83rem', color: 'var(--text-pri)', lineHeight: 1.6,
+          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          {msg.content}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: '85%' }}>
+      <span style={{ fontSize: '0.62rem', fontWeight: 700, color: meta.color, letterSpacing: '0.08em', paddingLeft: 2 }}>
+        {meta.label}
+      </span>
+
+      {isTemplate ? (
+        <div style={{
+          background: 'var(--bg-card)', border: `1px solid ${AGENT.template.color}22`,
+          borderLeft: `2px solid ${AGENT.template.color}`,
+          borderRadius: '3px 12px 12px 12px', overflow: 'hidden',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.85rem', borderBottom: '1px solid var(--border-inner)' }}>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-ter)' }}>HTML gerado</span>
+            <CopyButton text={msg.content} />
+          </div>
+          <pre style={{
+            fontSize: '0.67rem', color: 'var(--text-sec)', lineHeight: 1.6,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+            fontFamily: "'Courier New', monospace",
+            maxHeight: 360, overflowY: 'auto',
+            padding: '0.85rem',
+            margin: 0,
+          }}>
+            {msg.content}
+          </pre>
+        </div>
+      ) : (
+        <div style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+          borderRadius: '3px 12px 12px 12px',
+          padding: '0.65rem 0.9rem',
+          fontSize: '0.83rem', color: 'var(--text-sec)', lineHeight: 1.7,
+          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          {msg.content || (
+            <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              {[0,1,2].map(i => (
+                <span key={i} className="animate-pulse inline-block w-1 h-1 rounded-full" style={{ background: meta.color, animationDelay: `${i * 160}ms` }} />
+              ))}
+            </span>
+          )}
+          {msg.streaming && msg.content && (
+            <span className="animate-pulse" style={{ color: meta.color, marginLeft: 1 }}>▌</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Workspace() {
   const { token } = useAuth();
+  const [msgs, setMsgs]       = useState<Msg[]>([WELCOME]);
+  const [input, setInput]     = useState('');
+  const [streaming, setStream] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef  = useRef<(() => void) | null>(null);
 
-  const [idea, setIdea]     = useState('');
-  const [status, setStatus] = useState<Status>('idle');
-  const [active, setActive] = useState<AgentId | null>(null);
-  const [error, setError]   = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [msgs]);
 
-  const [pmText,   setPmText]   = useState('');
-  const [arquText, setArquText] = useState('');
-  const [tmplText, setTmplText] = useState('');
+  async function send() {
+    if (!input.trim() || streaming) return;
 
-  const abortRef = useRef<(() => void) | null>(null);
+    const text   = input.trim();
+    const userId  = `u-${Date.now()}`;
+    const agentId = `a-${Date.now()}`;
+    setInput('');
 
-  async function handleRun() {
-    if (!idea.trim() || status === 'streaming') return;
+    setMsgs(prev => [
+      ...prev,
+      { id: userId,  role: 'user',  content: text },
+      { id: agentId, role: 'agent', agent: 'hq', content: '', streaming: true },
+    ]);
+    setStream(true);
 
-    setPmText(''); setArquText(''); setTmplText('');
-    setError(null); setActive(null);
-    setStatus('streaming');
-
-    let aborted = false;
     const controller = new AbortController();
-    abortRef.current = () => { aborted = true; controller.abort(); };
+    abortRef.current = () => controller.abort();
 
     try {
-      const res = await fetch(`${PROXY}/api/hq/workspace/stream`, {
+      const history = msgs
+        .filter(m => m.content)
+        .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
+
+      const res = await fetch(`${PROXY}/api/hq/workspace/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ idea: idea.trim() }),
+        body: JSON.stringify({ messages: history, message: text }),
         signal: controller.signal,
       });
 
@@ -61,7 +172,7 @@ export default function Workspace() {
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done || aborted) break;
+        if (done) break;
 
         buf += decoder.decode(value, { stream: true });
         const lines = buf.split('\n');
@@ -71,215 +182,92 @@ export default function Workspace() {
           if (!line.startsWith('data: ')) continue;
           try {
             const ev = JSON.parse(line.slice(6));
-            if (ev.agent === 'done') { setStatus('done'); setActive(null); return; }
-            if (ev.agent === 'error') throw new Error(ev.message);
-            if (ev.agent === 'pm')        { setActive('pm');        setPmText(p => p + ev.chunk); }
-            else if (ev.agent === 'arquiteto') { setActive('arquiteto'); setArquText(p => p + ev.chunk); }
-            else if (ev.agent === 'template')  { setActive('template');  setTmplText(p => p + ev.chunk); }
-          } catch (e) {
-            if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e;
-          }
+            if (ev.type === 'agent') {
+              setMsgs(prev => prev.map(m => m.id === agentId ? { ...m, agent: ev.agent } : m));
+            } else if (ev.type === 'chunk') {
+              setMsgs(prev => prev.map(m => m.id === agentId ? { ...m, content: m.content + ev.text } : m));
+            } else if (ev.type === 'done') {
+              setMsgs(prev => prev.map(m => m.id === agentId ? { ...m, streaming: false } : m));
+              setStream(false);
+              return;
+            } else if (ev.type === 'error') {
+              throw new Error(ev.message);
+            }
+          } catch {}
         }
       }
-      if (!aborted) setStatus('done');
     } catch (e: unknown) {
-      if ((e as Error).name === 'AbortError') { setStatus('idle'); return; }
-      setError(e instanceof Error ? e.message : 'Erro desconhecido');
-      setStatus('error');
+      if ((e as Error).name === 'AbortError') { setStream(false); return; }
+      const errText = e instanceof Error ? e.message : 'Erro desconhecido';
+      setMsgs(prev => prev.map(m =>
+        m.id === agentId ? { ...m, content: `Erro: ${errText}`, streaming: false } : m
+      ));
     } finally {
-      setActive(null);
+      setStream(false);
       abortRef.current = null;
+      setMsgs(prev => prev.map(m => m.id === agentId ? { ...m, streaming: false } : m));
     }
   }
 
-  function handleStop() {
-    abortRef.current?.();
-    setStatus('idle');
-    setActive(null);
+  function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   }
-
-  function handleCopy() {
-    if (!tmplText) return;
-    navigator.clipboard.writeText(tmplText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  }
-
-  function handleReset() {
-    setIdea(''); setPmText(''); setArquText(''); setTmplText('');
-    setStatus('idle'); setError(null); setActive(null);
-  }
-
-  const GREEN  = '#7aaa4a';
-  const ACCENT = '#4a7fa5';
-  const isRunning = status === 'streaming';
-  const isDone    = status === 'done';
-
-  const textOf: Record<AgentId, string> = { pm: pmText, arquiteto: arquText, template: tmplText };
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl">
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', maxWidth: 820, margin: '0 auto', width: '100%' }}>
 
       {/* Header */}
-      <div className="mb-6">
-        <h1 style={{ ...jakarta, fontWeight: 800, fontSize: '1.6rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
+      <div style={{ padding: '1.5rem 1.5rem 0.75rem', flexShrink: 0 }}>
+        <h1 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 800, fontSize: '1.4rem', letterSpacing: '-0.04em', color: 'var(--text-pri)', lineHeight: 1.1 }}>
           Workspace
         </h1>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-ter)', marginTop: '0.3rem' }}>
-          Ideia → PM → Arquiteto → Template Builder via streaming
+        <p style={{ fontSize: '0.73rem', color: 'var(--text-ter)', marginTop: '0.2rem' }}>
+          Features · Bugs · Templates — diga <span style={{ color: '#7aaa4a' }}>"cria o template"</span> para gerar HTML
         </p>
       </div>
 
-      {/* Input */}
-      <div style={{ ...card, padding: '1.25rem', marginBottom: '1.75rem' }}>
-        <div style={{ ...dimLabel, marginBottom: '0.85rem' }}>● Ideia de template</div>
-        <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
-        <textarea
-          value={idea}
-          onChange={e => setIdea(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleRun(); }}
-          placeholder="Ex: template de carrinho abandonado com urgência e desconto progressivo..."
-          rows={3}
-          disabled={isRunning}
-          className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed disabled:opacity-50"
-        />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>⌘+Enter para rodar</span>
-            {isDone && (
-              <button onClick={handleReset} style={{ fontSize: '0.7rem', color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-                nova ideia
-              </button>
-            )}
-          </div>
-          {isRunning ? (
-            <button
-              onClick={handleStop}
-              style={{ background: 'rgba(239,68,68,.15)', color: '#f87171', border: '1px solid rgba(239,68,68,.25)', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, cursor: 'pointer' }}
-            >
-              Parar
-            </button>
-          ) : (
-            <button
-              onClick={handleRun}
-              disabled={!idea.trim() || isDone}
-              style={{ background: GREEN, color: 'black', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: !idea.trim() || isDone ? 0.4 : 1 }}
-            >
-              Rodar agentes →
-            </button>
-          )}
-        </div>
+      {/* Messages */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+        {msgs.map(m => <Bubble key={m.id} msg={m} />)}
+        <div ref={bottomRef} style={{ height: 8 }} />
       </div>
 
-      {/* Error */}
-      {error && (
-        <div style={{ marginBottom: '1.5rem', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.18)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>
-          {error}
-        </div>
-      )}
-
-      {/* Agent panels */}
-      {(isRunning || isDone || !!pmText) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {AGENTS.map(agent => {
-            const text      = textOf[agent.id];
-            const isActive  = active === agent.id;
-            const hasDone   = text.length > 0 && !isActive;
-            const isWaiting = !text && isRunning && active !== agent.id;
-
-            return (
-              <div
-                key={agent.id}
-                style={{
-                  ...card,
-                  borderLeft: `2px solid ${text ? agent.color : 'transparent'}`,
-                  padding: '1.25rem',
-                  transition: 'border-color .3s',
-                }}
-              >
-                {/* Panel header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: agent.color, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                      {agent.label}
-                    </span>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--text-ter)' }}>
-                      {agent.role}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {isActive && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: agent.color, fontSize: '0.65rem' }}>
-                        <span className="w-1.5 h-1.5 rounded-full inline-block animate-pulse" style={{ background: agent.color }} />
-                        escrevendo
-                      </div>
-                    )}
-                    {hasDone && !isActive && (
-                      <span style={{ fontSize: '0.65rem', color: `${agent.color}90` }}>✓ pronto</span>
-                    )}
-                    {isWaiting && (
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-ter)' }}>aguardando...</span>
-                    )}
-                    {agent.id === 'template' && text && (
-                      <button
-                        onClick={handleCopy}
-                        style={{ fontSize: '0.68rem', color: copied ? GREEN : 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color .2s' }}
-                        className="hover:text-white/60"
-                      >
-                        {copied ? '✓ copiado' : 'copiar HTML'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Panel content */}
-                {text ? (
-                  agent.id === 'template' ? (
-                    <pre style={{
-                      fontSize: '0.68rem', color: 'var(--text-sec)', lineHeight: 1.65,
-                      whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-                      fontFamily: "'Courier New', monospace",
-                      maxHeight: 400, overflowY: 'auto',
-                      background: 'var(--bg-inner)', border: '1px solid var(--border-inner)',
-                      borderRadius: 6, padding: '0.85rem',
-                    }}>
-                      {text}
-                      {isActive && <span className="animate-pulse" style={{ color: agent.color }}>▌</span>}
-                    </pre>
-                  ) : (
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-sec)', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-                      {text}
-                      {isActive && <span className="animate-pulse" style={{ color: agent.color }}>▌</span>}
-                    </p>
-                  )
-                ) : (
-                  <div style={{ height: 40, display: 'flex', alignItems: 'center' }}>
-                    {isWaiting && (
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {[0, 1, 2].map(i => (
-                          <span key={i} className="w-1 h-1 rounded-full animate-pulse" style={{ background: 'var(--text-ter)', animationDelay: `${i * 180}ms` }} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Done summary */}
-      {isDone && tmplText && (
-        <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'center' }}>
+      {/* Input */}
+      <div style={{ padding: '0.75rem 1.5rem 1.25rem', flexShrink: 0 }}>
+        <div style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+          borderRadius: 10, padding: '0.75rem 0.85rem',
+          display: 'flex', gap: 10, alignItems: 'flex-end',
+        }}>
+          <textarea
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Fale sobre uma feature, bug ou ideia..."
+            rows={2}
+            disabled={streaming}
+            className="flex-1 bg-transparent text-sm placeholder-white/20 focus:outline-none resize-none leading-relaxed disabled:opacity-50"
+            style={{ color: 'var(--text-pri)', minHeight: 40 }}
+          />
           <button
-            onClick={handleCopy}
-            style={{ background: ACCENT, color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem 1.5rem', borderRadius: 7, border: 'none', cursor: 'pointer' }}
+            onClick={send}
+            disabled={!input.trim() || streaming}
+            style={{
+              background: '#4a7fa5', color: 'white',
+              fontSize: '0.75rem', fontWeight: 700,
+              padding: '0.45rem 0.9rem', borderRadius: 7,
+              border: 'none', cursor: 'pointer', flexShrink: 0,
+              opacity: !input.trim() || streaming ? 0.35 : 1,
+              transition: 'opacity .15s',
+            }}
           >
-            {copied ? '✓ HTML copiado!' : 'Copiar template HTML →'}
+            {streaming ? '...' : 'Enviar →'}
           </button>
         </div>
-      )}
+        <p style={{ fontSize: '0.6rem', color: 'var(--text-ter)', marginTop: '0.35rem', paddingLeft: '0.2rem' }}>
+          Enter envia · Shift+Enter quebra linha
+        </p>
+      </div>
     </div>
   );
 }
