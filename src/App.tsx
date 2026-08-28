@@ -9,6 +9,7 @@ import Produto from '@/pages/Produto';
 import Pipeline from '@/pages/Pipeline';
 import Carteira from '@/pages/Carteira';
 import Conteudo from '@/pages/Conteudo';
+import CMO from '@/pages/CMO';
 import Contexto from '@/pages/Contexto';
 import Time from '@/pages/Time';
 import Workspace from '@/pages/Workspace';
@@ -57,6 +58,7 @@ function AppRoutes() {
         <Route path="pipeline" element={<Pipeline />} />
         <Route path="carteira" element={<Carteira />} />
         <Route path="conteudo" element={<Conteudo />} />
+        <Route path="cmo"      element={<CMO />} />
         <Route path="contexto" element={<Contexto />} />
         <Route path="time"      element={<Time />} />
         <Route path="workspace" element={<Workspace />} />
