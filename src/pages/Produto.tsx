@@ -8,7 +8,14 @@ const PROXY = (
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Status = 'ideia' | 'aprovada' | 'building' | 'done';
-type Tab    = 'backlog' | 'builder' | 'bugs';
+type Tab    = 'backlog' | 'builder' | 'bugs' | 'curador';
+
+interface CuradorBlock { type: string; [k: string]: unknown }
+interface CuradorResult {
+  label: string; description: string; nicho: string;
+  structure: CuradorBlock[]; notes: string[]; unmappable: string[];
+  snippet: string; screenshot: string;
+}
 
 interface Bug {
   id: string; sintoma: string; causa: string; arquivo: string | null;
@@ -78,6 +85,13 @@ export default function Produto() {
   const [copied,     setCopied]    = useState(false);
   const [prdFetched, setPrdFetched] = useState(false);
   const builderFetchedRef = useRef(false);
+
+  // Curador tab
+  const [curUrl,     setCurUrl]     = useState('');
+  const [curLoading, setCurLoading] = useState(false);
+  const [curError,   setCurError]   = useState<string | null>(null);
+  const [curResult,  setCurResult]  = useState<CuradorResult | null>(null);
+  const [curCopied,  setCurCopied]  = useState(false);
 
   // Bugs tab
   const [bugs,       setBugs]       = useState<Bug[]>([]);
@@ -203,6 +217,27 @@ export default function Produto() {
     await Promise.all(ids.map(id => fetch(`${PROXY}/api/hq/builder/prds/${id}`, { method: 'DELETE', headers: authH })));
   }
 
+  // ── Curador actions ──────────────────────────────────────────────────────
+  async function handleCurate() {
+    if (!curUrl.trim() || curLoading) return;
+    setCurLoading(true); setCurError(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/templates/analyze`, {
+        method: 'POST', headers: authH, body: JSON.stringify({ url: curUrl.trim() }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro');
+      setCurResult(data as CuradorResult);
+    } catch (e: unknown) { setCurError(e instanceof Error ? e.message : 'Erro'); }
+    finally { setCurLoading(false); }
+  }
+
+  function copySnippet(text: string) {
+    navigator.clipboard.writeText(text);
+    setCurCopied(true);
+    setTimeout(() => setCurCopied(false), 1500);
+  }
+
   // ── Bugs actions ─────────────────────────────────────────────────────────
   function parseJsonBug(raw: string): BugForm | null {
     const sanitize = (s: string) => s
@@ -293,6 +328,7 @@ export default function Produto() {
   const TABS: { id: Tab; label: string }[] = [
     { id: 'backlog', label: 'Backlog' },
     { id: 'builder', label: 'Builder' },
+    { id: 'curador', label: 'Curador' },
     { id: 'bugs',    label: 'Bugs'    },
   ];
 
@@ -714,6 +750,82 @@ export default function Produto() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB: Curador ──────────────────────────────────────────── */}
+      {tab === 'curador' && (
+        <div className="max-w-5xl">
+          <div style={{ ...card, padding: '1.25rem', marginBottom: '1.5rem' }}>
+            <div style={{ ...dimLabel, color: `${ACCENT}99`, marginBottom: '0.85rem' }}>● E-mail de referência</div>
+            <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
+            <input
+              value={curUrl}
+              onChange={e => setCurUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleCurate(); }}
+              placeholder="https://milled.com/...  ou  https://reallygoodemails.com/emails/..."
+              className="w-full bg-transparent text-white/80 text-sm placeholder-white/20 focus:outline-none"
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.85rem', paddingTop: '0.85rem', borderTop: '1px solid var(--border-inner)' }}>
+              <span style={{ fontSize: '0.7rem', color: 'var(--text-ter)' }}>Extrai só a estrutura — a copy sai como placeholder genérico</span>
+              <button
+                onClick={handleCurate}
+                disabled={curLoading || !curUrl.trim()}
+                style={{ background: ACCENT, color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.45rem 1rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: curLoading || !curUrl.trim() ? 0.4 : 1 }}
+              >
+                {curLoading
+                  ? <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span className="w-3 h-3 border border-white/30 border-t-white/80 rounded-full animate-spin" />Analisando...</span>
+                  : 'Analisar →'}
+              </button>
+            </div>
+          </div>
+
+          {curError && (
+            <div style={{ marginBottom: '1rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>{curError}</div>
+          )}
+
+          {curResult && (
+            <div className="flex flex-col gap-4">
+              <div style={{ ...card, padding: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '1.25rem' }}>
+                  {curResult.screenshot && (
+                    <img src={curResult.screenshot} alt="referência" style={{ width: 140, flexShrink: 0, borderRadius: 6, border: '1px solid var(--border-inner)', objectFit: 'cover', objectPosition: 'top', maxHeight: 260 }} />
+                  )}
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-pri)', marginBottom: '0.3rem' }}>{curResult.label}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-sec)', lineHeight: 1.5, marginBottom: '0.75rem' }}>{curResult.description}</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {curResult.structure.map((b, i) => (
+                        <span key={i} style={{ fontSize: '0.65rem', fontWeight: 600, padding: '0.15rem 0.5rem', borderRadius: 999, background: `${ACCENT}18`, color: `${ACCENT}cc` }}>{b.type}</span>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-ter)', marginTop: '0.6rem' }}>nicho: {curResult.nicho}</div>
+                  </div>
+                </div>
+
+                {(curResult.notes.length > 0 || curResult.unmappable.length > 0) && (
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-inner)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    {curResult.notes.map((n, i) => (
+                      <div key={`n${i}`} style={{ fontSize: '0.72rem', color: 'var(--text-sec)' }}>• {n}</div>
+                    ))}
+                    {curResult.unmappable.map((n, i) => (
+                      <div key={`u${i}`} style={{ fontSize: '0.72rem', color: '#f59e0b' }}>⚠ sem bloco equivalente: {n}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ ...card, padding: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                  <span style={dimLabel}>Snippet — cole em src/lib/blockEditor/templatePresets.ts</span>
+                  <button onClick={() => copySnippet(curResult.snippet)} style={{ fontSize: '0.72rem', color: 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }} className="hover:text-white/60 transition-colors">
+                    {curCopied ? '✓ copiado' : 'copiar'}
+                  </button>
+                </div>
+                <pre style={{ fontSize: '0.7rem', color: 'var(--text-sec)', lineHeight: 1.6, whiteSpace: 'pre-wrap', fontFamily: 'monospace', overflowX: 'auto', background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.9rem' }}>{curResult.snippet}</pre>
+              </div>
             </div>
           )}
         </div>
