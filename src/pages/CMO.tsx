@@ -8,6 +8,7 @@ const PROXY = (
 
 type Profile = 'reveny' | 'pessoal';
 type Status = 'ideia' | 'rascunho' | 'pronto' | 'publicado' | 'descartado';
+type Template = 'reveny' | 'quote' | 'loud';
 
 interface Slide { headline: string; body: string; kind?: string; kicker?: string; image_path?: string }
 interface ArcBeat { beat: string; note: string }
@@ -18,8 +19,16 @@ interface Idea {
   status: Status; source_note?: string;
   caption?: string; slides?: Slide[]; image_paths?: string[];
   research?: Research | null;
+  template?: Template | null;
   created_at: string; updated_at: string;
 }
+
+const TEMPLATE_LABEL: Record<Template, string> = { reveny: 'Reveny', quote: 'Quote-card', loud: 'Gritado' };
+const TEMPLATE_DESC: Record<Template, string> = {
+  reveny: 'Navy/claro alternado, pills e dots — nosso padrão',
+  quote: 'Cartão branco estilo citação, avatar + nome + handle',
+  loud: 'Headline gigante condensada, tons de azul/navy variando',
+};
 interface StrategyProfile {
   handle: string; voice: string;
   pillars: { key: string; name: string; desc: string }[];
@@ -285,12 +294,14 @@ function IdeaDetail({
   const [caption, setCaption] = useState(idea.caption || '');
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
   const [research, setResearch] = useState<Research | null>(idea.research || null);
+  const [template, setTemplate] = useState<Template>((idea.template as Template) || 'reveny');
   const [copied, setCopied] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<number>(-1);
 
   const dirty =
     caption !== (idea.caption || '') ||
+    template !== ((idea.template as Template) || 'reveny') ||
     JSON.stringify(slides) !== JSON.stringify(idea.slides || []);
 
   async function generateResearch() {
@@ -336,17 +347,20 @@ function IdeaDetail({
           method: 'PATCH', headers: H, body: JSON.stringify({ research }),
         });
       }
-      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, { method: 'POST', headers: H });
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, {
+        method: 'POST', headers: H, body: JSON.stringify({ template }),
+      });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro ao gerar carrossel');
       setCaption(data.caption || '');
       setSlides(data.slides || []);
-      onPatch({ research, caption: data.caption, slides: data.slides, image_paths: data.image_paths, status: data.status });
+      onPatch({ research, caption: data.caption, slides: data.slides, image_paths: data.image_paths, status: data.status, template });
       // a primeira entrega já sai com a capa pronta — sem isso o usuário
       // recebia um carrossel "incompleto" e precisava lembrar de voltar e
       // clicar num segundo botão pra ganhar a imagem de fundo do slide 1.
-      // Só ideias com pesquisa suportam capa (o endpoint exige research).
-      if (research) {
+      // Só ideias com pesquisa suportam capa (o endpoint exige research), e
+      // só o template "reveny" desenha foto no slide 1 (quote/loud ignoram).
+      if (research && template === 'reveny') {
         setBusy('cover');
         await generateCoverImage();
       }
@@ -371,17 +385,17 @@ function IdeaDetail({
   async function saveAndRender() {
     setBusy('render'); setErr(null);
     try {
-      // salva caption/slides
+      // salva caption/slides/template
       await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}`, {
-        method: 'PATCH', headers: H, body: JSON.stringify({ caption, slides }),
+        method: 'PATCH', headers: H, body: JSON.stringify({ caption, slides, template }),
       });
       // re-renderiza
       const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/render`, {
-        method: 'POST', headers: H, body: JSON.stringify({ slides }),
+        method: 'POST', headers: H, body: JSON.stringify({ slides, template }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro ao renderizar');
-      onPatch({ caption, slides, image_paths: data.image_paths });
+      onPatch({ caption, slides, template, image_paths: data.image_paths });
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Erro');
     } finally {
@@ -517,6 +531,23 @@ function IdeaDetail({
                 </>
               ) : null}
             </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {(['reveny', 'quote', 'loud'] as Template[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTemplate(t)}
+                    title={TEMPLATE_DESC[t]}
+                    style={template === t
+                      ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
+                      : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer' }}
+                  >
+                    {TEMPLATE_LABEL[t]}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={generateDraft}
@@ -538,6 +569,26 @@ function IdeaDetail({
         )
       ) : (
         <>
+          {/* estilo do carrossel — trocar aqui não re-renderiza sozinho,
+              precisa "Salvar e re-renderizar" (dirty já considera o template). */}
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {(['reveny', 'quote', 'loud'] as Template[]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTemplate(t)}
+                  title={TEMPLATE_DESC[t]}
+                  style={template === t
+                    ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
+                    : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer' }}
+                >
+                  {TEMPLATE_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* preview dos slides renderizados — cache-bust pelo updated_at: o
               arquivo é sempre upado no MESMO nome (slide-N.png, pra manter o
               link de download estável), então sem isso o navegador continua
@@ -603,29 +654,33 @@ function IdeaDetail({
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
-            {research ? (
-              <button
-                onClick={generateCover}
-                disabled={busy !== null}
-                style={{ ...jakarta, flex: 1, background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
-              >
-                {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
-              </button>
-            ) : (
-              // ideia gerada antes do research.skill existir (sem `research`) — sem
-              // isso o botão de capa fica preso pra sempre, já que a etapa de
-              // pesquisa só aparecia antes do carrossel existir.
-              <button
-                onClick={generateResearch}
-                disabled={busy !== null}
-                title="Essa ideia foi gerada antes da etapa de pesquisa existir — gere a pesquisa pra poder criar a imagem de capa"
-                style={{ ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
-              >
-                {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa) →'}
-              </button>
-            )}
-          </div>
+          {/* imagem de capa (Gemini) só existe no template "reveny" — quote/loud
+              não desenham foto no slide 1, gerar aqui seria gasto à toa. */}
+          {template === 'reveny' && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
+              {research ? (
+                <button
+                  onClick={generateCover}
+                  disabled={busy !== null}
+                  style={{ ...jakarta, flex: 1, background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                >
+                  {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
+                </button>
+              ) : (
+                // ideia gerada antes do research.skill existir (sem `research`) — sem
+                // isso o botão de capa fica preso pra sempre, já que a etapa de
+                // pesquisa só aparecia antes do carrossel existir.
+                <button
+                  onClick={generateResearch}
+                  disabled={busy !== null}
+                  title="Essa ideia foi gerada antes da etapa de pesquisa existir — gere a pesquisa pra poder criar a imagem de capa"
+                  style={{ ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                >
+                  {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa) →'}
+                </button>
+              )}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={saveAndRender}
