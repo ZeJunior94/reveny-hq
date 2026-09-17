@@ -318,6 +318,14 @@ function IdeaDetail({
       : prev));
   }
 
+  async function generateCoverImage() {
+    const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/cover`, { method: 'POST', headers: H });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || 'Erro ao gerar imagem de capa');
+    setSlides(data.slides || []);
+    onPatch({ slides: data.slides, image_paths: data.image_paths });
+  }
+
   async function generateDraft() {
     setBusy('draft'); setErr(null);
     try {
@@ -334,6 +342,14 @@ function IdeaDetail({
       setCaption(data.caption || '');
       setSlides(data.slides || []);
       onPatch({ research, caption: data.caption, slides: data.slides, image_paths: data.image_paths, status: data.status });
+      // a primeira entrega já sai com a capa pronta — sem isso o usuário
+      // recebia um carrossel "incompleto" e precisava lembrar de voltar e
+      // clicar num segundo botão pra ganhar a imagem de fundo do slide 1.
+      // Só ideias com pesquisa suportam capa (o endpoint exige research).
+      if (research) {
+        setBusy('cover');
+        await generateCoverImage();
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Erro');
     } finally {
@@ -344,11 +360,7 @@ function IdeaDetail({
   async function generateCover() {
     setBusy('cover'); setErr(null);
     try {
-      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/cover`, { method: 'POST', headers: H });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || 'Erro ao gerar imagem de capa');
-      setSlides(data.slides || []);
-      onPatch({ slides: data.slides, image_paths: data.image_paths });
+      await generateCoverImage();
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Erro');
     } finally {
