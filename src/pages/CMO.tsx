@@ -10,11 +10,14 @@ type Profile = 'reveny' | 'pessoal';
 type Status = 'ideia' | 'rascunho' | 'pronto' | 'publicado' | 'descartado';
 
 interface Slide { headline: string; body: string; kind?: string; image_path?: string }
+interface ArcBeat { beat: string; note: string }
+interface Research { pain: string; hook_type: string; hook: string; narrative_arc: ArcBeat[]; proof?: string }
 interface Idea {
   id: string; profile: Profile; pillar: string; format: string;
   hook: string; angle: string; goal: string; week_start: string;
   status: Status; source_note?: string;
   caption?: string; slides?: Slide[]; image_paths?: string[];
+  research?: Research | null;
   created_at: string; updated_at: string;
 }
 interface StrategyProfile {
@@ -277,10 +280,11 @@ function IdeaDetail({
   onStatus: (s: Status) => void;
   onRemove: () => void;
 }) {
-  const [busy, setBusy] = useState<null | 'draft' | 'render' | 'save'>(null);
+  const [busy, setBusy] = useState<null | 'research' | 'draft' | 'render' | 'save' | 'cover'>(null);
   const [err, setErr] = useState<string | null>(null);
   const [caption, setCaption] = useState(idea.caption || '');
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
+  const [research, setResearch] = useState<Research | null>(idea.research || null);
   const [copied, setCopied] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
   const uploadTargetRef = useRef<number>(-1);
@@ -289,15 +293,62 @@ function IdeaDetail({
     caption !== (idea.caption || '') ||
     JSON.stringify(slides) !== JSON.stringify(idea.slides || []);
 
+  async function generateResearch() {
+    setBusy('research'); setErr(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/research`, { method: 'POST', headers: H });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro ao pesquisar');
+      setResearch(data.research || null);
+      onPatch({ research: data.research });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function editResearch(patch: Partial<Research>) {
+    setResearch((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
+  function editArcBeat(i: number, patch: Partial<ArcBeat>) {
+    setResearch((prev) => (prev
+      ? { ...prev, narrative_arc: prev.narrative_arc.map((b, idx) => (idx === i ? { ...b, ...patch } : b)) }
+      : prev));
+  }
+
   async function generateDraft() {
     setBusy('draft'); setErr(null);
     try {
+      // se tem pesquisa editada na tela, salva antes — o backend lê o
+      // research já persistido, não o que vem no corpo do /draft
+      if (research) {
+        await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}`, {
+          method: 'PATCH', headers: H, body: JSON.stringify({ research }),
+        });
+      }
       const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, { method: 'POST', headers: H });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro ao gerar carrossel');
       setCaption(data.caption || '');
       setSlides(data.slides || []);
-      onPatch({ caption: data.caption, slides: data.slides, image_paths: data.image_paths, status: data.status });
+      onPatch({ research, caption: data.caption, slides: data.slides, image_paths: data.image_paths, status: data.status });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function generateCover() {
+    setBusy('cover'); setErr(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/cover`, { method: 'POST', headers: H });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro ao gerar imagem de capa');
+      setSlides(data.slides || []);
+      onPatch({ slides: data.slides, image_paths: data.image_paths });
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Erro');
     } finally {
@@ -401,13 +452,78 @@ function IdeaDetail({
       )}
 
       {slides.length === 0 ? (
-        <button
-          onClick={generateDraft}
-          disabled={busy === 'draft'}
-          style={{ ...jakarta, width: '100%', background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy === 'draft' ? 0.5 : 1 }}
-        >
-          {busy === 'draft' ? 'Gerando carrossel (~20s)…' : 'Gerar carrossel →'}
-        </button>
+        !research ? (
+          <button
+            onClick={generateResearch}
+            disabled={busy === 'research'}
+            style={{ ...jakarta, width: '100%', background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy === 'research' ? 0.5 : 1 }}
+          >
+            {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar →'}
+          </button>
+        ) : (
+          <>
+            <div style={{ ...sectionLabel, marginBottom: '0.6rem' }}>Pesquisa</div>
+            <div style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.75rem', marginBottom: '1rem' }}>
+              <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>Dor</label>
+              <textarea
+                value={research.pain}
+                onChange={(e) => editResearch({ pain: e.target.value })}
+                rows={2}
+                style={{ ...inputStyle, marginBottom: '0.75rem' }}
+              />
+              <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>
+                Gancho ({research.hook_type})
+              </label>
+              <input
+                value={research.hook}
+                onChange={(e) => editResearch({ hook: e.target.value })}
+                style={{ ...inputStyle, marginBottom: '0.75rem', fontWeight: 600 }}
+              />
+              <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.35rem' }}>Arco narrativo</label>
+              <div className="flex flex-col gap-2" style={{ marginBottom: research.proof ? '0.75rem' : 0 }}>
+                {research.narrative_arc.map((b, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: '0.6rem', color: '#7aaec7', background: '#7aaec715', padding: '0.3rem 0.4rem', borderRadius: 4, flexShrink: 0, minWidth: 64, textAlign: 'center' }}>
+                      {b.beat}
+                    </span>
+                    <input
+                      value={b.note}
+                      onChange={(e) => editArcBeat(i, { note: e.target.value })}
+                      style={{ ...inputStyle, fontSize: '0.78rem' }}
+                    />
+                  </div>
+                ))}
+              </div>
+              {research.proof ? (
+                <>
+                  <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>Prova/exemplo</label>
+                  <input
+                    value={research.proof}
+                    onChange={(e) => editResearch({ proof: e.target.value })}
+                    style={inputStyle}
+                  />
+                </>
+              ) : null}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={generateDraft}
+                disabled={busy !== null}
+                style={{ ...jakarta, flex: 1, background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              >
+                {busy === 'draft' ? 'Gerando carrossel (~20s)…' : 'Gerar carrossel a partir da pesquisa →'}
+              </button>
+              <button
+                onClick={generateResearch}
+                disabled={busy !== null}
+                title="Pesquisar de novo"
+                style={{ ...jakarta, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.6rem 0.9rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              >
+                {busy === 'research' ? '…' : 'Pesquisar de novo'}
+              </button>
+            </div>
+          </>
+        )
       ) : (
         <>
           {/* preview dos slides renderizados */}
@@ -463,6 +579,16 @@ function IdeaDetail({
             ))}
           </div>
 
+          <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
+            <button
+              onClick={generateCover}
+              disabled={busy !== null || !research}
+              title={research ? undefined : 'Precisa gerar a pesquisa primeiro'}
+              style={{ ...jakarta, flex: 1, background: 'transparent', color: research ? '#4a7fa5' : 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: research ? 'pointer' : 'not-allowed', opacity: busy ? 0.5 : 1 }}
+            >
+              {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
+            </button>
+          </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={saveAndRender}
