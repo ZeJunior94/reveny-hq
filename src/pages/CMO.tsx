@@ -538,14 +538,20 @@ function IdeaDetail({
         )
       ) : (
         <>
-          {/* preview dos slides renderizados */}
+          {/* preview dos slides renderizados — cache-bust pelo updated_at: o
+              arquivo é sempre upado no MESMO nome (slide-N.png, pra manter o
+              link de download estável), então sem isso o navegador continua
+              mostrando a imagem antiga em cache até um refresh forçado. */}
           {imgs.length > 0 && (
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: '1rem' }}>
-              {imgs.map((u, i) => (
-                <a key={u} href={u} download={`slide-${i + 1}.png`} title={`Baixar slide ${i + 1}`} style={{ flexShrink: 0 }}>
-                  <img src={u} alt={`slide ${i + 1}`} style={{ width: 132, height: 165, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-inner)' }} />
-                </a>
-              ))}
+              {imgs.map((u, i) => {
+                const versioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
+                return (
+                  <a key={u + (idea.updated_at || '')} href={u} download={`slide-${i + 1}.png`} title={`Baixar slide ${i + 1}`} style={{ flexShrink: 0 }}>
+                    <img src={versioned} alt={`slide ${i + 1}`} style={{ width: 132, height: 165, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-inner)' }} />
+                  </a>
+                );
+              })}
             </div>
           )}
 
