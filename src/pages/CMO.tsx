@@ -9,7 +9,7 @@ const PROXY = (
 type Profile = 'reveny' | 'pessoal';
 type Status = 'ideia' | 'rascunho' | 'pronto' | 'publicado' | 'descartado';
 
-interface Slide { headline: string; body: string; kind?: string; image_path?: string }
+interface Slide { headline: string; body: string; kind?: string; kicker?: string; image_path?: string }
 interface ArcBeat { beat: string; note: string }
 interface Research { pain: string; hook_type: string; hook: string; narrative_arc: ArcBeat[]; proof?: string }
 interface Idea {
@@ -561,6 +561,12 @@ function IdeaDetail({
                   </button>
                 </div>
                 <input
+                  value={s.kicker || ''}
+                  onChange={(e) => editSlide(i, { kicker: e.target.value })}
+                  placeholder="Categoria do slide (pill no topo, ex: A CAUSA REAL)"
+                  style={{ ...inputStyle, fontSize: '0.68rem', textTransform: 'uppercase', marginBottom: '0.35rem' }}
+                />
+                <input
                   value={s.headline}
                   onChange={(e) => editSlide(i, { headline: e.target.value })}
                   placeholder="Título do slide"
@@ -580,14 +586,27 @@ function IdeaDetail({
           </div>
 
           <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
-            <button
-              onClick={generateCover}
-              disabled={busy !== null || !research}
-              title={research ? undefined : 'Precisa gerar a pesquisa primeiro'}
-              style={{ ...jakarta, flex: 1, background: 'transparent', color: research ? '#4a7fa5' : 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: research ? 'pointer' : 'not-allowed', opacity: busy ? 0.5 : 1 }}
-            >
-              {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
-            </button>
+            {research ? (
+              <button
+                onClick={generateCover}
+                disabled={busy !== null}
+                style={{ ...jakarta, flex: 1, background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              >
+                {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
+              </button>
+            ) : (
+              // ideia gerada antes do research.skill existir (sem `research`) — sem
+              // isso o botão de capa fica preso pra sempre, já que a etapa de
+              // pesquisa só aparecia antes do carrossel existir.
+              <button
+                onClick={generateResearch}
+                disabled={busy !== null}
+                title="Essa ideia foi gerada antes da etapa de pesquisa existir — gere a pesquisa pra poder criar a imagem de capa"
+                style={{ ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              >
+                {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa) →'}
+              </button>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
