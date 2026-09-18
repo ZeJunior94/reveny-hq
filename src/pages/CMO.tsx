@@ -8,7 +8,7 @@ const PROXY = (
 
 type Profile = 'reveny' | 'pessoal';
 type Status = 'ideia' | 'rascunho' | 'pronto' | 'publicado' | 'descartado';
-type Template = 'reveny' | 'quote' | 'loud';
+type Template = 'reveny' | 'quote' | 'loud' | 'cinema';
 
 interface Slide { headline: string; body: string; kind?: string; kicker?: string; image_path?: string }
 interface ArcBeat { beat: string; note: string }
@@ -23,11 +23,12 @@ interface Idea {
   created_at: string; updated_at: string;
 }
 
-const TEMPLATE_LABEL: Record<Template, string> = { reveny: 'Reveny', quote: 'Quote-card', loud: 'Gritado' };
+const TEMPLATE_LABEL: Record<Template, string> = { reveny: 'Reveny', quote: 'Quote-card', loud: 'Gritado', cinema: 'Cinema' };
 const TEMPLATE_DESC: Record<Template, string> = {
   reveny: 'Navy/claro alternado, pills e dots — nosso padrão',
   quote: 'Cartão branco estilo citação, avatar + nome + handle',
   loud: 'Headline gigante condensada, tons de azul/navy variando',
+  cinema: 'Capa com foto + headline com 1-2 palavras em destaque colorido; resto do carrossel igual ao Reveny',
 };
 interface StrategyProfile {
   handle: string; voice: string; displayName?: string; avatarUrl?: string;
@@ -488,7 +489,7 @@ function IdeaDetail({
       // clicar num segundo botão pra ganhar a imagem de fundo do slide 1.
       // Só ideias com pesquisa suportam capa (o endpoint exige research), e
       // só o template "reveny" desenha foto no slide 1 (quote/loud ignoram).
-      if (research && template === 'reveny') {
+      if (research && (template === 'reveny' || template === 'cinema')) {
         setBusy('cover');
         await generateCoverImage();
       }
@@ -662,7 +663,7 @@ function IdeaDetail({
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
               <div style={{ display: 'flex', gap: 6 }}>
-                {(['reveny', 'quote', 'loud'] as Template[]).map((t) => (
+                {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
                   <button
                     key={t}
                     onClick={() => setTemplate(t)}
@@ -702,7 +703,7 @@ function IdeaDetail({
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
             <div style={{ display: 'flex', gap: 6 }}>
-              {(['reveny', 'quote', 'loud'] as Template[]).map((t) => (
+              {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTemplate(t)}
@@ -766,7 +767,9 @@ function IdeaDetail({
                 <input
                   value={s.headline}
                   onChange={(e) => editSlide(i, { headline: e.target.value })}
-                  placeholder="Título do slide"
+                  placeholder={template === 'cinema' && (s.kind || (i === 0 ? 'hook' : '')) === 'hook'
+                    ? 'Título do slide — use **palavra** pra destacar em cor'
+                    : 'Título do slide'}
                   style={{ ...inputStyle, fontWeight: 600, marginBottom: '0.35rem' }}
                 />
                 {s.kind !== 'hook' && (
@@ -782,9 +785,9 @@ function IdeaDetail({
             ))}
           </div>
 
-          {/* imagem de capa (Gemini) só existe no template "reveny" — quote/loud
-              não desenham foto no slide 1, gerar aqui seria gasto à toa. */}
-          {template === 'reveny' && (
+          {/* imagem de capa (Gemini) só existe nos templates "reveny" e "cinema"
+              — quote/loud não desenham foto no slide 1, gerar aqui seria gasto à toa. */}
+          {(template === 'reveny' || template === 'cinema') && (
             <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
               {research ? (
                 <button
