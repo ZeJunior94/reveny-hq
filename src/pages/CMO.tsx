@@ -192,6 +192,9 @@ export default function CMO() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showProfileConfig, setShowProfileConfig] = useState(false);
+  const [quickUrl, setQuickUrl] = useState('');
+  const [quickBusy, setQuickBusy] = useState(false);
+  const [quickErr, setQuickErr] = useState<string | null>(null);
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -236,6 +239,27 @@ export default function CMO() {
       setError(e instanceof Error ? e.message : 'Erro ao gerar plano');
     } finally {
       setPlanning(false);
+    }
+  }
+
+  async function createFromLink() {
+    const url = quickUrl.trim();
+    if (!url || quickBusy) return;
+    setQuickBusy(true); setQuickErr(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/quick-link`, {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ profile, article_url: url }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro ao criar ideia a partir do link');
+      setIdeas((prev) => [data, ...prev]);
+      setSelectedId(data.id);
+      setQuickUrl('');
+    } catch (e) {
+      setQuickErr(e instanceof Error ? e.message : 'Erro ao criar ideia a partir do link');
+    } finally {
+      setQuickBusy(false);
     }
   }
 
@@ -349,6 +373,30 @@ export default function CMO() {
               {planning ? 'Planejando…' : 'Gerar plano da semana →'}
             </button>
           </div>
+
+          {strategy?.[profile]?.pillars.some((p) => p.key === 'noticia-ia') && (
+            <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ ...sectionLabel, color: '#4a7fa599', marginBottom: '0.85rem' }}>● Notícia via link</div>
+              <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
+              <input
+                value={quickUrl}
+                onChange={(e) => setQuickUrl(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') createFromLink(); }}
+                placeholder="Cole o link da matéria — cria a ideia e já pesquisa, sem passar pelo plano"
+                style={inputStyle}
+              />
+              {quickErr && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#f87171' }}>{quickErr}</div>
+              )}
+              <button
+                onClick={createFromLink}
+                disabled={quickBusy || !quickUrl.trim()}
+                style={{ ...jakarta, marginTop: '0.85rem', width: '100%', background: '#4a7fa5', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: (quickBusy || !quickUrl.trim()) ? 0.5 : 1 }}
+              >
+                {quickBusy ? 'Criando + pesquisando…' : 'Criar ideia a partir do link →'}
+              </button>
+            </div>
+          )}
 
           {fetching ? (
             <div className="flex flex-col gap-2">
