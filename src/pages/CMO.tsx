@@ -12,7 +12,7 @@ type Template = 'reveny' | 'quote' | 'loud' | 'cinema';
 
 interface Slide { headline: string; body: string; kind?: string; kicker?: string; image_path?: string }
 interface ArcBeat { beat: string; note: string }
-interface Research { pain: string; hook_type: string; hook: string; narrative_arc: ArcBeat[]; proof?: string }
+interface Research { pain: string; hook_type: string; hook: string; narrative_arc: ArcBeat[]; proof?: string; logos?: string[] }
 interface Idea {
   id: string; profile: Profile; pillar: string; format: string;
   hook: string; angle: string; goal: string; week_start: string;
@@ -655,10 +655,19 @@ function IdeaDetail({
                   <input
                     value={research.proof}
                     onChange={(e) => editResearch({ proof: e.target.value })}
-                    style={inputStyle}
+                    style={{ ...inputStyle, marginBottom: '0.75rem' }}
                   />
                 </>
               ) : null}
+              <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>
+                Logos na capa (separados por vírgula — nunca nome de pessoa)
+              </label>
+              <input
+                value={(research.logos || []).join(', ')}
+                onChange={(e) => editResearch({ logos: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
+                placeholder="ex: Claude, Gemini"
+                style={inputStyle}
+              />
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
