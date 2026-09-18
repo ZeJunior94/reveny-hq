@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import JSZip from 'jszip';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PROXY = (
@@ -262,6 +264,17 @@ export default function CMO() {
     return [...m.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [ideas]);
 
+  // ordem plana igual à exibida na lista (grupos de semana + ordem dentro do
+  // grupo) — usada pelas setas de navegação pra não precisar voltar pra lista
+  // pra abrir o próximo card.
+  const flatIds = useMemo(() => grouped.flatMap(([, list]) => list.map((i) => i.id)), [grouped]);
+  const selectedIndex = selectedId ? flatIds.indexOf(selectedId) : -1;
+  const goToOffset = useCallback((delta: number) => {
+    if (selectedIndex === -1) return;
+    const next = flatIds[selectedIndex + delta];
+    if (next) setSelectedId(next);
+  }, [flatIds, selectedIndex]);
+
   return (
     <div className="p-4 md:p-8 max-w-6xl">
       {/* Header */}
@@ -394,6 +407,10 @@ export default function CMO() {
               onPatch={(patch) => patchLocal(selected.id, patch)}
               onStatus={(s) => setStatus(selected.id, s)}
               onRemove={() => removeIdea(selected.id)}
+              onPrev={() => goToOffset(-1)}
+              onNext={() => goToOffset(1)}
+              hasPrev={selectedIndex > 0}
+              hasNext={selectedIndex !== -1 && selectedIndex < flatIds.length - 1}
             />
           ) : (
             <div style={{ ...card, padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 240 }}>
@@ -409,7 +426,7 @@ export default function CMO() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function IdeaDetail({
-  idea, H, pillarName, onPatch, onStatus, onRemove,
+  idea, H, pillarName, onPatch, onStatus, onRemove, onPrev, onNext, hasPrev, hasNext,
 }: {
   idea: Idea;
   H: Record<string, string>;
@@ -417,8 +434,12 @@ function IdeaDetail({
   onPatch: (p: Partial<Idea>) => void;
   onStatus: (s: Status) => void;
   onRemove: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
 }) {
-  const [busy, setBusy] = useState<null | 'research' | 'draft' | 'render' | 'save' | 'cover'>(null);
+  const [busy, setBusy] = useState<null | 'research' | 'draft' | 'render' | 'save' | 'cover' | 'export'>(null);
   const [err, setErr] = useState<string | null>(null);
   const [caption, setCaption] = useState(idea.caption || '');
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
@@ -565,6 +586,31 @@ function IdeaDetail({
 
   const imgs = idea.image_paths || [];
 
+  async function exportZip() {
+    if (!imgs.length) return;
+    setBusy('export'); setErr(null);
+    try {
+      const zip = new JSZip();
+      await Promise.all(imgs.map(async (u, i) => {
+        const versioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
+        const r = await fetch(versioned);
+        if (!r.ok) throw new Error(`Falha ao baixar slide ${i + 1}`);
+        zip.file(`slide-${String(i + 1).padStart(2, '0')}.png`, await r.blob());
+      }));
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `carrossel-${idea.pillar}-${idea.id.slice(0, 8)}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro ao exportar');
+    } finally {
+      setBusy(null);
+    }
+  }
+
   return (
     <div style={{ ...card, padding: '1.25rem' }} className="sticky top-6">
       <input ref={uploadRef} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
@@ -574,7 +620,23 @@ function IdeaDetail({
         <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#7aaec7', background: '#7aaec715', padding: '0.15rem 0.5rem', borderRadius: 4 }}>
           {pillarName(idea.pillar)}
         </span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button
+            onClick={onPrev}
+            disabled={!hasPrev}
+            title="Ideia anterior"
+            style={{ display: 'flex', color: hasPrev ? 'var(--text-ter)' : 'var(--text-dim)', background: 'none', border: 'none', cursor: hasPrev ? 'pointer' : 'default', opacity: hasPrev ? 1 : 0.4, padding: 2 }}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={onNext}
+            disabled={!hasNext}
+            title="Próxima ideia"
+            style={{ display: 'flex', color: hasNext ? 'var(--text-ter)' : 'var(--text-dim)', background: 'none', border: 'none', cursor: hasNext ? 'pointer' : 'default', opacity: hasNext ? 1 : 0.4, padding: 2 }}
+          >
+            <ChevronRight size={16} />
+          </button>
           <select
             value={idea.status}
             onChange={(e) => onStatus(e.target.value as Status)}
@@ -733,6 +795,17 @@ function IdeaDetail({
                 );
               })}
             </div>
+          )}
+
+          {imgs.length > 0 && (
+            <button
+              onClick={exportZip}
+              disabled={busy !== null}
+              style={{ ...jakarta, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1, marginBottom: '1rem' }}
+            >
+              <Download size={14} />
+              {busy === 'export' ? 'Exportando…' : `Exportar carrossel (${imgs.length} slides, .zip)`}
+            </button>
           )}
 
           {/* legenda */}
