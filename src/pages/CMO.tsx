@@ -494,6 +494,7 @@ function IdeaDetail({
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
   const [research, setResearch] = useState<Research | null>(idea.research || null);
   const [articleUrl, setArticleUrl] = useState('');
+  const [previewIdx, setPreviewIdx] = useState(0);
   const [template, setTemplate] = useState<Template>((idea.template as Template) || 'reveny');
   const [copied, setCopied] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
@@ -857,19 +858,69 @@ function IdeaDetail({
           {/* preview dos slides renderizados — cache-bust pelo updated_at: o
               arquivo é sempre upado no MESMO nome (slide-N.png, pra manter o
               link de download estável), então sem isso o navegador continua
-              mostrando a imagem antiga em cache até um refresh forçado. */}
-          {imgs.length > 0 && (
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: '1rem' }}>
-              {imgs.map((u, i) => {
-                const versioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
-                return (
-                  <a key={u + (idea.updated_at || '')} href={u} download={`slide-${i + 1}.png`} title={`Baixar slide ${i + 1}`} style={{ flexShrink: 0 }}>
-                    <img src={versioned} alt={`slide ${i + 1}`} style={{ width: 132, height: 165, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-inner)' }} />
-                  </a>
-                );
-              })}
-            </div>
-          )}
+              mostrando a imagem antiga em cache até um refresh forçado.
+              Preview grande com setas ←/→ pra passar entre as artes sem
+              precisar sair da tela do card — pedido do usuário 2026-09-18. */}
+          {imgs.length > 0 && (() => {
+            const idx = Math.min(previewIdx, imgs.length - 1);
+            const cur = idx >= 0 ? imgs[idx] : null;
+            const versioned = cur && idea.updated_at ? `${cur}?v=${encodeURIComponent(idea.updated_at)}` : cur;
+            return (
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                  {versioned && (
+                    <img
+                      src={versioned}
+                      alt={`slide ${idx + 1}`}
+                      style={{ width: '100%', maxWidth: 300, aspectRatio: '4 / 5', objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border-inner)' }}
+                    />
+                  )}
+                  {idx > 0 && (
+                    <button
+                      onClick={() => setPreviewIdx(idx - 1)}
+                      title="Slide anterior"
+                      style={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', background: 'rgba(11,21,32,.6)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                  )}
+                  {idx < imgs.length - 1 && (
+                    <button
+                      onClick={() => setPreviewIdx(idx + 1)}
+                      title="Próximo slide"
+                      style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', background: 'rgba(11,21,32,.6)', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  )}
+                </div>
+                <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-ter)', marginBottom: 8 }}>
+                  slide {idx + 1} de {imgs.length}
+                  {cur && (
+                    <>
+                      {' · '}
+                      <a href={cur} download={`slide-${idx + 1}.png`} style={{ color: '#4a7fa5' }}>baixar</a>
+                    </>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8 }}>
+                  {imgs.map((u, i) => {
+                    const thumbVersioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
+                    return (
+                      <button
+                        key={u + (idea.updated_at || '')}
+                        onClick={() => setPreviewIdx(i)}
+                        title={`Ver slide ${i + 1}`}
+                        style={{ flexShrink: 0, padding: 0, background: 'none', borderRadius: 6, cursor: 'pointer', border: i === idx ? '2px solid #4a7fa5' : '1px solid var(--border-inner)' }}
+                      >
+                        <img src={thumbVersioned} alt={`slide ${i + 1}`} style={{ width: 60, height: 75, objectFit: 'cover', borderRadius: 5, display: 'block' }} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {imgs.length > 0 && (
             <button
