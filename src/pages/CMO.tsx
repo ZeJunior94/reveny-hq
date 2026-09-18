@@ -80,10 +80,14 @@ function btnSecondary(disabled: boolean): React.CSSProperties {
 // título real da ideia pra lista: o pilar "noticia-ia" sempre semeia um hook
 // genérico fixo ("Notícia de IA de hoje") até a pesquisa/carrossel existir —
 // sem isso todo card da lista mostrava o mesmo texto, impossível diferenciar
-// (achado ao testar a tela ao vivo com dado real, 2026-09-18). `**palavra**`
-// é a marcação de destaque do template cinema, não deve aparecer crua.
+// (achado ao testar a tela ao vivo com dado real, 2026-09-18). O headline do
+// slide 1 vem primeiro porque é o texto mais concreto que existe (o próprio
+// copy.skill escreve ele em cima do arco) — testado ao vivo e `research.hook`
+// às vezes fica com o mesmo placeholder genérico, então ele sozinho não
+// bastava. `**palavra**` é a marcação de destaque do template cinema, não
+// deve aparecer crua.
 function ideaTitle(idea: Idea): string {
-  const raw = idea.research?.hook || idea.slides?.[0]?.headline || idea.hook;
+  const raw = idea.slides?.[0]?.headline || idea.research?.hook || idea.hook;
   return raw.replace(/\*\*/g, '');
 }
 
