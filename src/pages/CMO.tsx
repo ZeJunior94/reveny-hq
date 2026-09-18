@@ -229,6 +229,7 @@ export default function CMO() {
   const [quickUrl, setQuickUrl] = useState('');
   const [quickBusy, setQuickBusy] = useState(false);
   const [quickErr, setQuickErr] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -268,6 +269,7 @@ export default function CMO() {
       if (!r.ok) throw new Error(data.error || 'Erro ao gerar plano');
       setIdeas((prev) => [...(data.ideas || []), ...prev]);
       setContext('');
+      setPage(0);
       if (data.ideas?.[0]) setSelectedId(data.ideas[0].id);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao gerar plano');
@@ -290,6 +292,7 @@ export default function CMO() {
       setIdeas((prev) => [data, ...prev]);
       setSelectedId(data.id);
       setQuickUrl('');
+      setPage(0);
     } catch (e) {
       setQuickErr(e instanceof Error ? e.message : 'Erro ao criar ideia a partir do link');
     } finally {
@@ -324,7 +327,7 @@ export default function CMO() {
 
   // ordem plana igual à exibida na lista (grupos de semana + ordem dentro do
   // grupo) — usada pelas setas de navegação pra não precisar voltar pra lista
-  // pra abrir o próximo card.
+  // pra abrir o próximo card. Percorre TODAS as ideias, não só a página atual.
   const flatIds = useMemo(() => grouped.flatMap(([, list]) => list.map((i) => i.id)), [grouped]);
   const selectedIndex = selectedId ? flatIds.indexOf(selectedId) : -1;
   const goToOffset = useCallback((delta: number) => {
@@ -332,6 +335,23 @@ export default function CMO() {
     const next = flatIds[selectedIndex + delta];
     if (next) setSelectedId(next);
   }, [flatIds, selectedIndex]);
+
+  // paginação da lista à esquerda — evita a coluna crescer sem fim conforme
+  // ideias se acumulam; agrupamento por semana continua dentro de cada página.
+  const PAGE_SIZE = 5;
+  const flatIdeas = useMemo(() => grouped.flatMap(([, list]) => list), [grouped]);
+  const totalPages = Math.max(1, Math.ceil(flatIdeas.length / PAGE_SIZE));
+  const clampedPage = Math.min(page, totalPages - 1);
+  const pageGrouped = useMemo(() => {
+    const start = clampedPage * PAGE_SIZE;
+    const pageItems = flatIdeas.slice(start, start + PAGE_SIZE);
+    const m = new Map<string, Idea[]>();
+    for (const i of pageItems) {
+      const k = i.week_start || 'sem data';
+      (m.get(k) || m.set(k, []).get(k)!).push(i);
+    }
+    return [...m.entries()];
+  }, [flatIdeas, clampedPage]);
 
   return (
     <div className="p-4 md:p-8 max-w-6xl">
@@ -350,7 +370,7 @@ export default function CMO() {
             {(['reveny', 'pessoal'] as Profile[]).map((p) => (
               <button
                 key={p}
-                onClick={() => { setProfile(p); setSelectedId(null); }}
+                onClick={() => { setProfile(p); setSelectedId(null); setPage(0); }}
                 style={profile === p
                   ? { ...jakarta, background: '#4a7fa5', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.4rem 0.9rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
                   : { ...jakarta, border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.4rem 0.9rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }}
@@ -441,7 +461,7 @@ export default function CMO() {
               Nenhuma ideia ainda. Gera o plano da semana.
             </div>
           ) : (
-            grouped.map(([week, items]) => (
+            pageGrouped.map(([week, items]) => (
               <div key={week} style={{ marginBottom: '1.25rem' }}>
                 <div style={{ ...sectionLabel, marginBottom: '0.6rem' }}>
                   {week === mondayISO() ? 'Esta semana' : weekLabel(week)}
@@ -488,6 +508,28 @@ export default function CMO() {
                 </div>
               </div>
             ))
+          )}
+
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: '0.25rem' }}>
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={clampedPage === 0}
+                style={{ ...jakarta, border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.72rem', padding: '0.35rem 0.7rem', borderRadius: 6, background: 'transparent', cursor: clampedPage === 0 ? 'default' : 'pointer', opacity: clampedPage === 0 ? 0.4 : 1 }}
+              >
+                ← Anteriores
+              </button>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-ter)' }}>
+                Página {clampedPage + 1} de {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={clampedPage >= totalPages - 1}
+                style={{ ...jakarta, border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.72rem', padding: '0.35rem 0.7rem', borderRadius: 6, background: 'transparent', cursor: clampedPage >= totalPages - 1 ? 'default' : 'pointer', opacity: clampedPage >= totalPages - 1 ? 0.4 : 1 }}
+              >
+                Próximas →
+              </button>
+            </div>
           )}
         </div>
 
