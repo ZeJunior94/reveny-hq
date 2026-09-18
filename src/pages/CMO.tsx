@@ -30,7 +30,7 @@ const TEMPLATE_DESC: Record<Template, string> = {
   loud: 'Headline gigante condensada, tons de azul/navy variando',
 };
 interface StrategyProfile {
-  handle: string; voice: string;
+  handle: string; voice: string; displayName?: string; avatarUrl?: string;
   pillars: { key: string; name: string; desc: string }[];
 }
 type Strategy = Record<Profile, StrategyProfile>;
@@ -66,6 +66,116 @@ function weekLabel(iso: string) {
   return `${f(d)} – ${f(end)}`;
 }
 
+function ProfileConfigPanel({
+  profile, strategy, H, onClose, onSaved,
+}: {
+  profile: Profile;
+  strategy: Strategy;
+  H: Record<string, string>;
+  onClose: () => void;
+  onSaved: (s: Strategy) => void;
+}) {
+  const prof = strategy[profile];
+  const [displayName, setDisplayName] = useState(prof.displayName || '');
+  const [handle, setHandle] = useState(prof.handle || '');
+  const [avatarUrl, setAvatarUrl] = useState(prof.avatarUrl || '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setBusy(true); setErr(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/content/upload`, {
+        method: 'POST',
+        headers: { Authorization: H.Authorization, 'Content-Type': file.type || 'image/png' },
+        body: file,
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro no upload');
+      setAvatarUrl(data.url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function save() {
+    setBusy(true); setErr(null);
+    try {
+      const updated: Strategy = {
+        ...strategy,
+        [profile]: { ...prof, displayName: displayName.trim(), handle: handle.trim(), avatarUrl },
+      };
+      const r = await fetch(`${PROXY}/api/hq/content/strategy`, {
+        method: 'PUT', headers: H, body: JSON.stringify(updated),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Erro ao salvar');
+      onSaved(updated);
+      onClose();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+      <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={sectionLabel}>Configurar perfil — {PROFILE_LABEL[profile]}</div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-ter)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>
+          ×
+        </button>
+      </div>
+      {err && (
+        <div style={{ marginBottom: '0.85rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.6rem 0.85rem', color: '#f87171', fontSize: '0.78rem' }}>
+          {err}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: '1.1rem' }}>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          title="Trocar foto"
+          style={{
+            width: 64, height: 64, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+            border: '1px solid var(--border-inner)', padding: 0,
+            background: avatarUrl ? `center/cover no-repeat url(${avatarUrl})` : '#4a7fa5',
+            color: 'white', fontWeight: 800, fontSize: '1.3rem', ...jakarta,
+          }}
+        >
+          {!avatarUrl && (displayName || handle || '?').replace('@', '').charAt(0).toUpperCase()}
+        </button>
+        <button
+          onClick={() => fileRef.current?.click()}
+          disabled={busy}
+          style={{ ...jakarta, fontSize: '0.72rem', fontWeight: 700, color: '#4a7fa5', background: 'transparent', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.5rem 0.9rem', cursor: 'pointer' }}
+        >
+          {busy ? '…' : 'Trocar foto'}
+        </button>
+      </div>
+      <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>Nome de exibição</label>
+      <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="ex: Reveny" style={{ ...inputStyle, marginBottom: '0.75rem' }} />
+      <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>Handle</label>
+      <input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@reveny" style={{ ...inputStyle, marginBottom: '1.1rem' }} />
+      <button
+        onClick={save}
+        disabled={busy}
+        style={{ ...jakarta, width: '100%', background: '#4a7fa5', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+      >
+        {busy ? 'Salvando…' : 'Salvar'}
+      </button>
+    </div>
+  );
+}
+
 export default function CMO() {
   const { token } = useAuth();
   const H = useMemo(() => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }), [token]);
@@ -78,6 +188,7 @@ export default function CMO() {
   const [context, setContext] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showProfileConfig, setShowProfileConfig] = useState(false);
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -163,7 +274,7 @@ export default function CMO() {
               Plano semanal + carrossel de Instagram
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {(['reveny', 'pessoal'] as Profile[]).map((p) => (
               <button
                 key={p}
@@ -175,10 +286,27 @@ export default function CMO() {
                 {PROFILE_LABEL[p]}
               </button>
             ))}
+            <button
+              onClick={() => setShowProfileConfig((v) => !v)}
+              title="Configurar perfil (foto, nome, @)"
+              style={{ ...jakarta, border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.4rem 0.7rem', borderRadius: 6, background: showProfileConfig ? 'var(--bg-inner)' : 'transparent', cursor: 'pointer' }}
+            >
+              ⚙
+            </button>
           </div>
         </div>
         <div style={{ marginTop: '1.5rem', borderBottom: '1px solid var(--border-main)' }} />
       </div>
+
+      {showProfileConfig && strategy && (
+        <ProfileConfigPanel
+          profile={profile}
+          strategy={strategy}
+          H={H}
+          onClose={() => setShowProfileConfig(false)}
+          onSaved={(s) => setStrategy(s)}
+        />
+      )}
 
       {error && (
         <div style={{ marginBottom: '1rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.75rem 1rem', color: '#f87171', fontSize: '0.82rem' }}>
