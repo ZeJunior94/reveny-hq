@@ -57,6 +57,36 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', lineHeight: 1.5, resize: 'none',
 };
 
+// 2 estilos de botão só, usados em toda a tela: primário = a única ação de
+// "avançar" da etapa atual; secundário = tudo o resto (regerar, exportar,
+// pesquisar de novo...). Antes cada etapa tinha sua própria cor sem lógica
+// (verde pra pesquisar/gerar, azul pra salvar/capa) — decisão de design
+// 2026-09-18, junto com a análise de UI da tela do CMO.
+function btnPrimary(disabled: boolean): React.CSSProperties {
+  return {
+    ...jakarta, width: '100%', background: '#4a7fa5', color: 'white', fontSize: '0.78rem',
+    fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer',
+    opacity: disabled ? 0.5 : 1,
+  };
+}
+function btnSecondary(disabled: boolean): React.CSSProperties {
+  return {
+    ...jakarta, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700,
+    padding: '0.55rem 0.9rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer',
+    opacity: disabled ? 0.5 : 1,
+  };
+}
+
+// título real da ideia pra lista: o pilar "noticia-ia" sempre semeia um hook
+// genérico fixo ("Notícia de IA de hoje") até a pesquisa/carrossel existir —
+// sem isso todo card da lista mostrava o mesmo texto, impossível diferenciar
+// (achado ao testar a tela ao vivo com dado real, 2026-09-18). `**palavra**`
+// é a marcação de destaque do template cinema, não deve aparecer crua.
+function ideaTitle(idea: Idea): string {
+  const raw = idea.research?.hook || idea.slides?.[0]?.headline || idea.hook;
+  return raw.replace(/\*\*/g, '');
+}
+
 function mondayISO(d = new Date()) {
   const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
@@ -413,31 +443,44 @@ export default function CMO() {
                   {week === mondayISO() ? 'Esta semana' : weekLabel(week)}
                 </div>
                 <div className="flex flex-col gap-2">
-                  {items.map((i) => (
+                  {items.map((i) => {
+                    const thumb = i.image_paths?.[0];
+                    const thumbVersioned = thumb ? `${thumb}?v=${encodeURIComponent(i.updated_at)}` : null;
+                    return (
                     <button
                       key={i.id}
                       onClick={() => setSelectedId(i.id)}
                       className="text-left transition-all"
                       style={selectedId === i.id
-                        ? { background: 'var(--bg-inner)', border: '1px solid rgba(74,127,165,.3)', borderRadius: 8, padding: '0.9rem 1rem' }
-                        : { ...card, padding: '0.9rem 1rem', opacity: i.status === 'descartado' ? 0.5 : 1 }}
+                        ? { display: 'flex', gap: 10, alignItems: 'flex-start', background: 'var(--bg-inner)', border: '1px solid rgba(74,127,165,.3)', borderRadius: 8, padding: '0.9rem 1rem' }
+                        : { display: 'flex', gap: 10, alignItems: 'flex-start', ...card, padding: '0.9rem 1rem', opacity: i.status === 'descartado' ? 0.5 : 1 }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.62rem', fontWeight: 600, color: '#7aaec7', background: '#7aaec715', padding: '0.1rem 0.4rem', borderRadius: 4 }}>
-                          {pillarName(i.pillar)}
-                        </span>
-                        <span style={{ fontSize: '0.6rem', color: STATUS_COLOR[i.status], background: `${STATUS_COLOR[i.status]}15`, padding: '0.1rem 0.4rem', borderRadius: 4 }}>
-                          {i.status}
-                        </span>
-                        {i.image_paths?.length ? (
-                          <span style={{ fontSize: '0.6rem', color: 'var(--text-ter)' }}>{i.image_paths.length} slides</span>
-                        ) : null}
-                      </div>
-                      <div style={{ ...jakarta, fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-sec)', lineHeight: 1.3 }}>
-                        {i.hook}
+                      {thumbVersioned && (
+                        <img
+                          src={thumbVersioned}
+                          alt=""
+                          style={{ width: 38, height: 48, objectFit: 'cover', borderRadius: 4, flexShrink: 0, border: '1px solid var(--border-inner)' }}
+                        />
+                      )}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.62rem', fontWeight: 600, color: '#7aaec7', background: '#7aaec715', padding: '0.1rem 0.4rem', borderRadius: 4 }}>
+                            {pillarName(i.pillar)}
+                          </span>
+                          <span style={{ fontSize: '0.6rem', color: STATUS_COLOR[i.status], background: `${STATUS_COLOR[i.status]}15`, padding: '0.1rem 0.4rem', borderRadius: 4 }}>
+                            {i.status}
+                          </span>
+                          {i.image_paths?.length ? (
+                            <span style={{ fontSize: '0.6rem', color: 'var(--text-ter)' }}>{i.image_paths.length} slides</span>
+                          ) : null}
+                        </div>
+                        <div style={{ ...jakarta, fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-sec)', lineHeight: 1.3 }}>
+                          {ideaTitle(i)}
+                        </div>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))
@@ -741,7 +784,7 @@ function IdeaDetail({
             <button
               onClick={generateResearch}
               disabled={busy === 'research'}
-              style={{ ...jakarta, width: '100%', background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy === 'research' ? 0.5 : 1 }}
+              style={btnPrimary(busy === 'research')}
             >
               {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar →'}
             </button>
@@ -772,19 +815,31 @@ function IdeaDetail({
                 style={{ ...inputStyle, marginBottom: '0.75rem', fontWeight: 600 }}
               />
               <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.35rem' }}>Arco narrativo</label>
-              <div className="flex flex-col gap-2" style={{ marginBottom: research.proof ? '0.75rem' : 0 }}>
-                {research.narrative_arc.map((b, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: '0.6rem', color: '#7aaec7', background: '#7aaec715', padding: '0.3rem 0.4rem', borderRadius: 4, flexShrink: 0, minWidth: 64, textAlign: 'center' }}>
-                      {b.beat}
-                    </span>
-                    <input
-                      value={b.note}
-                      onChange={(e) => editArcBeat(i, { note: e.target.value })}
-                      style={{ ...inputStyle, fontSize: '0.78rem' }}
-                    />
-                  </div>
-                ))}
+              {/* linha do tempo em vez de inputs empilhados sem conexão —
+                  o que importa aqui é ler os beats em sequência e julgar se
+                  a narrativa flui, não preencher um formulário (2026-09-18). */}
+              <div style={{ marginBottom: research.proof ? '0.75rem' : 0 }}>
+                {research.narrative_arc.map((b, i) => {
+                  const isLast = i === research.narrative_arc.length - 1;
+                  return (
+                    <div key={i} style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 8, flexShrink: 0 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7aaec7', flexShrink: 0, marginTop: 5 }} />
+                        {!isLast && <div style={{ flex: 1, width: 1, background: 'var(--border-inner)', minHeight: 8 }} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0, paddingBottom: isLast ? 0 : 10 }}>
+                        <div style={{ fontSize: '0.6rem', fontWeight: 600, color: '#7aaec7', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+                          {b.beat}
+                        </div>
+                        <input
+                          value={b.note}
+                          onChange={(e) => editArcBeat(i, { note: e.target.value })}
+                          style={{ ...inputStyle, fontSize: '0.78rem' }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               {research.proof ? (
                 <>
@@ -818,7 +873,7 @@ function IdeaDetail({
               <button
                 onClick={generateDraft}
                 disabled={busy !== null}
-                style={{ ...jakarta, flex: 1, background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                style={{ ...btnPrimary(busy !== null), flex: 1, width: 'auto' }}
               >
                 {busy === 'draft' ? 'Gerando carrossel (~20s)…' : 'Gerar carrossel a partir da pesquisa →'}
               </button>
@@ -826,7 +881,7 @@ function IdeaDetail({
                 onClick={generateResearch}
                 disabled={busy !== null}
                 title="Pesquisar de novo"
-                style={{ ...jakarta, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.6rem 0.9rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                style={btnSecondary(busy !== null)}
               >
                 {busy === 'research' ? '…' : 'Pesquisar de novo'}
               </button>
@@ -894,7 +949,7 @@ function IdeaDetail({
                     </button>
                   )}
                 </div>
-                <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-ter)', marginBottom: 8 }}>
+                <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-ter)', marginBottom: 10 }}>
                   slide {idx + 1} de {imgs.length}
                   {cur && (
                     <>
@@ -903,6 +958,47 @@ function IdeaDetail({
                     </>
                   )}
                 </div>
+
+                {/* edição do slide que está aberto no preview acima — antes
+                    ficava numa lista à parte, bem mais abaixo na tela, sem
+                    nenhum vínculo visual com a imagem (usuário tinha que
+                    rolar e contar qual card correspondia a qual slide).
+                    Trocar de slide na seta/miniatura já troca esses campos
+                    automaticamente, porque os dois usam o mesmo `idx`. */}
+                {slides[idx] && (
+                  <div style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.65rem 0.75rem', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)' }}>{idx + 1} · {slides[idx].kind || 'content'}</span>
+                      <button onClick={() => pickImage(idx)} style={{ fontSize: '0.62rem', color: slides[idx].image_path ? '#7aaa4a' : 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        {slides[idx].image_path ? '✓ imagem' : '+ imagem'}
+                      </button>
+                    </div>
+                    <input
+                      value={slides[idx].kicker || ''}
+                      onChange={(e) => editSlide(idx, { kicker: e.target.value })}
+                      placeholder="Categoria do slide (pill no topo, ex: A CAUSA REAL)"
+                      style={{ ...inputStyle, fontSize: '0.68rem', textTransform: 'uppercase', marginBottom: '0.35rem' }}
+                    />
+                    <input
+                      value={slides[idx].headline}
+                      onChange={(e) => editSlide(idx, { headline: e.target.value })}
+                      placeholder={template === 'cinema' && (slides[idx].kind || (idx === 0 ? 'hook' : '')) === 'hook'
+                        ? 'Título do slide — use **palavra** pra destacar em cor'
+                        : 'Título do slide'}
+                      style={{ ...inputStyle, fontWeight: 600, marginBottom: slides[idx].kind !== 'hook' ? '0.35rem' : 0 }}
+                    />
+                    {slides[idx].kind !== 'hook' && (
+                      <textarea
+                        value={slides[idx].body}
+                        onChange={(e) => editSlide(idx, { body: e.target.value })}
+                        placeholder="Texto do slide"
+                        rows={2}
+                        style={inputStyle}
+                      />
+                    )}
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8 }}>
                   {imgs.map((u, i) => {
                     const thumbVersioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
@@ -926,7 +1022,7 @@ function IdeaDetail({
             <button
               onClick={exportZip}
               disabled={busy !== null}
-              style={{ ...jakarta, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1, marginBottom: '1rem' }}
+              style={{ ...btnSecondary(busy !== null), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', marginBottom: '1rem' }}
             >
               <Download size={14} />
               {busy === 'export' ? 'Exportando…' : `Exportar carrossel (${imgs.length} slides, .zip)`}
@@ -945,55 +1041,30 @@ function IdeaDetail({
           </div>
           <textarea value={caption} onChange={(e) => setCaption(e.target.value)} rows={6} style={{ ...inputStyle, marginBottom: '1rem', whiteSpace: 'pre-wrap' }} />
 
-          {/* editor de slides */}
-          <div style={{ ...sectionLabel, marginBottom: '0.6rem' }}>Slides</div>
-          <div className="flex flex-col gap-2" style={{ marginBottom: '1rem' }}>
-            {slides.map((s, i) => (
-              <div key={i} style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.65rem 0.75rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.6rem', color: 'var(--text-dim)' }}>{i + 1} · {s.kind || 'content'}</span>
-                  <button onClick={() => pickImage(i)} style={{ fontSize: '0.62rem', color: s.image_path ? '#7aaa4a' : 'var(--text-ter)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                    {s.image_path ? '✓ imagem' : '+ imagem'}
-                  </button>
-                </div>
-                <input
-                  value={s.kicker || ''}
-                  onChange={(e) => editSlide(i, { kicker: e.target.value })}
-                  placeholder="Categoria do slide (pill no topo, ex: A CAUSA REAL)"
-                  style={{ ...inputStyle, fontSize: '0.68rem', textTransform: 'uppercase', marginBottom: '0.35rem' }}
-                />
-                <input
-                  value={s.headline}
-                  onChange={(e) => editSlide(i, { headline: e.target.value })}
-                  placeholder={template === 'cinema' && (s.kind || (i === 0 ? 'hook' : '')) === 'hook'
-                    ? 'Título do slide — use **palavra** pra destacar em cor'
-                    : 'Título do slide'}
-                  style={{ ...inputStyle, fontWeight: 600, marginBottom: '0.35rem' }}
-                />
-                {s.kind !== 'hook' && (
-                  <textarea
-                    value={s.body}
-                    onChange={(e) => editSlide(i, { body: e.target.value })}
-                    placeholder="Texto do slide"
-                    rows={2}
-                    style={inputStyle}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* imagem de capa (Gemini) só existe nos templates "reveny" e "cinema"
-              — quote/loud não desenham foto no slide 1, gerar aqui seria gasto à toa. */}
-          {(template === 'reveny' || template === 'cinema') && (
-            <div style={{ display: 'flex', gap: 8, marginBottom: '0.6rem' }}>
-              {research ? (
+          {/* ação primária (salvar/re-renderizar) em destaque sozinha no
+              topo; capa + regerar agrupadas embaixo como ações secundárias
+              do mesmo peso visual — antes "Gerar imagem de capa" ficava
+              solta acima da linha de botões, com estilo inconsistente com
+              "Regerar" mesmo sendo a mesma categoria de ação (2026-09-18). */}
+          <button
+            onClick={saveAndRender}
+            disabled={busy !== null}
+            style={{
+              ...(dirty || imgs.length === 0 ? btnPrimary(busy !== null) : btnSecondary(busy !== null)),
+              width: '100%', marginBottom: 8,
+            }}
+          >
+            {busy === 'render' ? 'Renderizando…' : dirty ? 'Salvar e re-renderizar' : 'Re-renderizar'}
+          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {(template === 'reveny' || template === 'cinema') && (
+              research ? (
                 <button
                   onClick={generateCover}
                   disabled={busy !== null}
-                  style={{ ...jakarta, flex: 1, background: 'transparent', color: '#4a7fa5', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                  style={{ ...btnSecondary(busy !== null), flex: 1 }}
                 >
-                  {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa →'}
+                  {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa'}
                 </button>
               ) : (
                 // ideia gerada antes do research.skill existir (sem `research`) — sem
@@ -1003,28 +1074,19 @@ function IdeaDetail({
                   onClick={generateResearch}
                   disabled={busy !== null}
                   title="Essa ideia foi gerada antes da etapa de pesquisa existir — gere a pesquisa pra poder criar a imagem de capa"
-                  style={{ ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                  style={{ ...btnSecondary(busy !== null), flex: 1 }}
                 >
-                  {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa) →'}
+                  {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa)'}
                 </button>
-              )}
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              onClick={saveAndRender}
-              disabled={busy !== null}
-              style={{ ...jakarta, flex: 1, background: dirty || imgs.length === 0 ? '#4a7fa5' : 'var(--bg-inner)', color: dirty || imgs.length === 0 ? 'white' : 'var(--text-ter)', fontSize: '0.75rem', fontWeight: 700, padding: '0.55rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
-            >
-              {busy === 'render' ? 'Renderizando…' : dirty ? 'Salvar e re-renderizar' : 'Re-renderizar'}
-            </button>
+              )
+            )}
             <button
               onClick={generateDraft}
               disabled={busy !== null}
               title="Gerar tudo de novo com a IA"
-              style={{ ...jakarta, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.55rem 0.9rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              style={{ ...btnSecondary(busy !== null), flex: 1 }}
             >
-              {busy === 'draft' ? '…' : 'Regerar'}
+              {busy === 'draft' ? '…' : 'Regerar tudo'}
             </button>
           </div>
         </>
