@@ -444,6 +444,7 @@ function IdeaDetail({
   const [caption, setCaption] = useState(idea.caption || '');
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
   const [research, setResearch] = useState<Research | null>(idea.research || null);
+  const [articleUrl, setArticleUrl] = useState('');
   const [template, setTemplate] = useState<Template>((idea.template as Template) || 'reveny');
   const [copied, setCopied] = useState(false);
   const uploadRef = useRef<HTMLInputElement>(null);
@@ -457,7 +458,10 @@ function IdeaDetail({
   async function generateResearch() {
     setBusy('research'); setErr(null);
     try {
-      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/research`, { method: 'POST', headers: H });
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/research`, {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ article_url: articleUrl.trim() || undefined }),
+      });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Erro ao pesquisar');
       setResearch(data.research || null);
@@ -670,16 +674,30 @@ function IdeaDetail({
 
       {slides.length === 0 ? (
         !research ? (
-          <button
-            onClick={generateResearch}
-            disabled={busy === 'research'}
-            style={{ ...jakarta, width: '100%', background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy === 'research' ? 0.5 : 1 }}
-          >
-            {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar →'}
-          </button>
+          <>
+            <input
+              value={articleUrl}
+              onChange={(e) => setArticleUrl(e.target.value)}
+              placeholder="Opcional: cole o link de uma matéria pra usar como fonte (em vez da IA buscar sozinha)"
+              style={{ ...inputStyle, marginBottom: '0.5rem' }}
+            />
+            <button
+              onClick={generateResearch}
+              disabled={busy === 'research'}
+              style={{ ...jakarta, width: '100%', background: '#7aaa4a', color: 'white', fontSize: '0.78rem', fontWeight: 700, padding: '0.6rem', borderRadius: 6, border: 'none', cursor: 'pointer', opacity: busy === 'research' ? 0.5 : 1 }}
+            >
+              {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar →'}
+            </button>
+          </>
         ) : (
           <>
             <div style={{ ...sectionLabel, marginBottom: '0.6rem' }}>Pesquisa</div>
+            <input
+              value={articleUrl}
+              onChange={(e) => setArticleUrl(e.target.value)}
+              placeholder="Link da matéria (opcional — usado se clicar em 'Pesquisar de novo')"
+              style={{ ...inputStyle, marginBottom: '0.75rem' }}
+            />
             <div style={{ background: 'var(--bg-inner)', border: '1px solid var(--border-inner)', borderRadius: 6, padding: '0.75rem', marginBottom: '1rem' }}>
               <label style={{ fontSize: '0.62rem', color: 'var(--text-dim)', display: 'block', marginBottom: '0.25rem' }}>Dor</label>
               <textarea
