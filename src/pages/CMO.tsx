@@ -441,6 +441,7 @@ function IdeaDetail({
 }) {
   const [busy, setBusy] = useState<null | 'research' | 'draft' | 'render' | 'save' | 'cover' | 'export'>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [caption, setCaption] = useState(idea.caption || '');
   const [slides, setSlides] = useState<Slide[]>(idea.slides || []);
   const [research, setResearch] = useState<Research | null>(idea.research || null);
@@ -484,10 +485,12 @@ function IdeaDetail({
   }
 
   async function generateCoverImage() {
+    setNote(null);
     const r = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/cover`, { method: 'POST', headers: H });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || 'Erro ao gerar imagem de capa');
     setSlides(data.slides || []);
+    if (data.cover_reference_note) setNote(data.cover_reference_note);
     onPatch({ slides: data.slides, image_paths: data.image_paths });
   }
 
@@ -669,6 +672,11 @@ function IdeaDetail({
       {err && (
         <div style={{ marginBottom: '0.85rem', background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.2)', borderRadius: 6, padding: '0.6rem 0.85rem', color: '#f87171', fontSize: '0.78rem' }}>
           {err}
+        </div>
+      )}
+      {note && (
+        <div style={{ marginBottom: '0.85rem', background: 'rgba(122,174,199,.1)', border: '1px solid rgba(122,174,199,.25)', borderRadius: 6, padding: '0.6rem 0.85rem', color: '#7aaec7', fontSize: '0.78rem' }}>
+          ℹ️ {note}
         </div>
       )}
 
