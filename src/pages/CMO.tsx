@@ -129,7 +129,7 @@ function ProfileConfigPanel({
     <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
       <input ref={fileRef} type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div style={sectionLabel}>Configurar perfil — {PROFILE_LABEL[profile]}</div>
+        <div style={sectionLabel}>Configurar perfil — {prof.handle || PROFILE_LABEL[profile]}</div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-ter)', cursor: 'pointer', fontSize: '1rem', lineHeight: 1 }}>
           ×
         </button>
@@ -283,7 +283,7 @@ export default function CMO() {
                   ? { ...jakarta, background: '#4a7fa5', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '0.4rem 0.9rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
                   : { ...jakarta, border: '1px solid var(--border-inner)', color: 'var(--text-ter)', fontSize: '0.75rem', padding: '0.4rem 0.9rem', borderRadius: 6, background: 'transparent', cursor: 'pointer' }}
               >
-                {PROFILE_LABEL[p]}
+                {strategy?.[p]?.handle || PROFILE_LABEL[p]}
               </button>
             ))}
             <button
