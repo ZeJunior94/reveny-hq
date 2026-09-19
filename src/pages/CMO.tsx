@@ -46,6 +46,25 @@ const GOAL_LABEL: Record<string, string> = {
   credibilidade: 'credibilidade', trial: 'trial', alcance: 'alcance', rede: 'rede',
 };
 
+// Temas fixos do pilar "dicas-email" (@josejunior) — cards clicáveis que
+// criam a ideia e já geram o carrossel na hora, sem pesquisa nenhuma (são
+// táticas atemporais, não dependem de sinal do produto nem de notícia). Lista
+// dada pelo usuário 2026-09-18. `angle` é o que vira o corpo do carrossel no
+// /draft — específico o bastante pra não sair genérico, mas sem fechar o
+// ângulo, a IA que desenvolve.
+const EMAIL_TIP_TOPICS: { hook: string; angle: string }[] = [
+  { hook: 'Assunto de e-mail que aumenta abertura', angle: 'Tática prática de linha de assunto que realmente aumenta taxa de abertura em e-commerce — o que funciona e o que é mito.' },
+  { hook: 'Fluxo de carrinho abandonado', angle: 'Como estruturar um fluxo de carrinho abandonado que recupera venda sem parecer desesperado.' },
+  { hook: 'E-mail de boas-vindas (welcome flow)', angle: 'O que um bom welcome flow precisa ter pra converter o primeiro contato em cliente.' },
+  { hook: 'Segmentação de base sem ferramenta cara', angle: 'Como segmentar a base de e-mail de forma útil mesmo sem uma ferramenta enterprise.' },
+  { hook: 'Cadência de envio ideal (sem virar spam)', angle: 'Como definir a frequência de envio de e-mail marketing sem cansar a base nem sumir da caixa de entrada.' },
+  { hook: 'Pós-compra e reativação de inativos', angle: 'Como usar e-mail pra reter cliente que já comprou e reativar quem sumiu.' },
+  { hook: 'Deliverability básico (cair na caixa de entrada)', angle: 'O básico de deliverability que todo e-commerce devia checar antes de culpar o "algoritmo" do e-mail.' },
+  { hook: 'Teste A/B de assunto e CTA', angle: 'Como rodar teste A/B de e-mail marketing de forma simples, sem precisar de ferramenta sofisticada.' },
+  { hook: 'Régua de contato por etapa do funil', angle: 'Como montar uma régua de e-mail que acompanha o cliente por etapa do funil, não um disparo genérico só.' },
+  { hook: 'Erro mais comum que vejo em conta de e-commerce', angle: 'O erro de e-mail marketing mais repetido em conta de e-commerce, pela experiência de quem já geriu 160+ contas.' },
+];
+
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 const card = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: 8 };
 const sectionLabel: React.CSSProperties = {
@@ -230,6 +249,7 @@ export default function CMO() {
   const [quickBusy, setQuickBusy] = useState(false);
   const [quickErr, setQuickErr] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [topicBusy, setTopicBusy] = useState<string | null>(null);
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -297,6 +317,37 @@ export default function CMO() {
       setQuickErr(e instanceof Error ? e.message : 'Erro ao criar ideia a partir do link');
     } finally {
       setQuickBusy(false);
+    }
+  }
+
+  // tema fixo (sem pesquisa) → cria a ideia E já gera o carrossel num clique
+  // só, encadeando quick-topic + draft — diferente de createFromLink, que só
+  // cria+pesquisa e deixa o "gerar carrossel" pro usuário clicar depois
+  // dentro do card. Pedido explícito: "gerar pontualmente, sem gerar a
+  // pesquisa" (2026-09-18).
+  async function createFromTopic(pillar: string, topic: { hook: string; angle: string }) {
+    if (topicBusy) return;
+    setTopicBusy(topic.hook);
+    setError(null);
+    try {
+      const r = await fetch(`${PROXY}/api/hq/content/ideas/quick-topic`, {
+        method: 'POST', headers: H,
+        body: JSON.stringify({ profile, pillar, hook: topic.hook, angle: topic.angle }),
+      });
+      const idea = await r.json();
+      if (!r.ok) throw new Error(idea.error || 'Erro ao criar ideia a partir do tema');
+      const dr = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, {
+        method: 'POST', headers: H, body: JSON.stringify({ template: 'reveny' }),
+      });
+      const draft = await dr.json();
+      if (!dr.ok) throw new Error(draft.error || 'Erro ao gerar carrossel a partir do tema');
+      setIdeas((prev) => [draft, ...prev]);
+      setSelectedId(draft.id);
+      setPage(0);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao gerar a partir do tema');
+    } finally {
+      setTopicBusy(null);
     }
   }
 
@@ -449,6 +500,33 @@ export default function CMO() {
               >
                 {quickBusy ? 'Criando + pesquisando…' : 'Criar ideia a partir do link →'}
               </button>
+            </div>
+          )}
+
+          {strategy?.[profile]?.pillars.some((p) => p.key === 'dicas-email') && (
+            <div style={{ ...card, padding: '1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ ...sectionLabel, color: '#4a7fa599', marginBottom: '0.85rem' }}>● Dica de e-mail marketing</div>
+              <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', marginBottom: '0.75rem' }}>
+                Tema fixo, sem pesquisa — clique gera o carrossel na hora.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {EMAIL_TIP_TOPICS.map((t) => (
+                  <button
+                    key={t.hook}
+                    onClick={() => createFromTopic('dicas-email', t)}
+                    disabled={topicBusy !== null}
+                    style={{
+                      ...jakarta, textAlign: 'left', fontSize: '0.76rem', padding: '0.5rem 0.7rem', borderRadius: 6,
+                      border: '1px solid var(--border-inner)', background: topicBusy === t.hook ? 'var(--bg-inner)' : 'transparent',
+                      color: 'var(--text-sec)', cursor: topicBusy ? 'default' : 'pointer',
+                      opacity: topicBusy && topicBusy !== t.hook ? 0.5 : 1,
+                    }}
+                  >
+                    {topicBusy === t.hook ? 'Gerando carrossel…' : t.hook}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
