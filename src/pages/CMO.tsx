@@ -46,23 +46,26 @@ const GOAL_LABEL: Record<string, string> = {
   credibilidade: 'credibilidade', trial: 'trial', alcance: 'alcance', rede: 'rede',
 };
 
-// Temas fixos do pilar "dicas-email" (@josejunior) — cards clicáveis que
-// criam a ideia e já geram o carrossel na hora, sem pesquisa nenhuma (são
-// táticas atemporais, não dependem de sinal do produto nem de notícia). Lista
-// dada pelo usuário 2026-09-18. `angle` é o que vira o corpo do carrossel no
-// /draft — específico o bastante pra não sair genérico, mas sem fechar o
-// ângulo, a IA que desenvolve.
-const EMAIL_TIP_TOPICS: { hook: string; angle: string }[] = [
-  { hook: 'Assunto de e-mail que aumenta abertura', angle: 'Tática prática de linha de assunto que realmente aumenta taxa de abertura em e-commerce — o que funciona e o que é mito.' },
-  { hook: 'Fluxo de carrinho abandonado', angle: 'Como estruturar um fluxo de carrinho abandonado que recupera venda sem parecer desesperado.' },
-  { hook: 'E-mail de boas-vindas (welcome flow)', angle: 'O que um bom welcome flow precisa ter pra converter o primeiro contato em cliente.' },
-  { hook: 'Segmentação de base sem ferramenta cara', angle: 'Como segmentar a base de e-mail de forma útil mesmo sem uma ferramenta enterprise.' },
-  { hook: 'Cadência de envio ideal (sem virar spam)', angle: 'Como definir a frequência de envio de e-mail marketing sem cansar a base nem sumir da caixa de entrada.' },
-  { hook: 'Pós-compra e reativação de inativos', angle: 'Como usar e-mail pra reter cliente que já comprou e reativar quem sumiu.' },
-  { hook: 'Deliverability básico (cair na caixa de entrada)', angle: 'O básico de deliverability que todo e-commerce devia checar antes de culpar o "algoritmo" do e-mail.' },
-  { hook: 'Teste A/B de assunto e CTA', angle: 'Como rodar teste A/B de e-mail marketing de forma simples, sem precisar de ferramenta sofisticada.' },
-  { hook: 'Régua de contato por etapa do funil', angle: 'Como montar uma régua de e-mail que acompanha o cliente por etapa do funil, não um disparo genérico só.' },
-  { hook: 'Erro mais comum que vejo em conta de e-commerce', angle: 'O erro de e-mail marketing mais repetido em conta de e-commerce, pela experiência de quem já geriu 160+ contas.' },
+// Formatos fixos do pilar "dicas-email" (@josejunior) — cards clicáveis que
+// criam a ideia e já geram o carrossel na hora, sem pesquisa nenhuma. Cada
+// card é uma ESTRUTURA narrativa (não um tema fixo — 1ª versão usava tema
+// fixo, o usuário corrigiu 2026-09-18: quer o card representando o FORMATO,
+// com a IA escolhendo o assunto de e-mail marketing livremente a cada clique
+// dentro dessa estrutura). `label` é só o texto do botão; `hook` e `angle`
+// são a instrução mandada pro /draft — `hook` começa com um verbo (Desmonte,
+// Ensine, Mostre...) de propósito, pro /draft reconhecer que é uma instrução
+// e não uma headline pronta (ver regra do prompt em server.js).
+const EMAIL_TIP_FORMATS: { label: string; hook: string; angle: string }[] = [
+  { label: 'Mito vs Verdade', hook: 'Desmonte um mito comum de e-mail marketing pra e-commerce', angle: 'Formato mito vs verdade: escolha um mito específico de e-mail marketing/e-commerce, afirme o mito, desminta com a verdade prática, explique por que o mito persiste, feche com a alternativa certa.' },
+  { label: 'Passo a passo', hook: 'Ensine um processo de e-mail marketing em passos numerados', angle: 'Formato passo a passo: escolha um processo concreto (ex: montar um fluxo, configurar uma automação), quebre em 3 a 5 passos numerados e sequenciais, 1 passo por slide, sem pular etapa.' },
+  { label: 'Antes / depois', hook: 'Mostre um antes e depois de uma prática de e-mail marketing', angle: 'Formato antes/depois: descreva a abordagem ruim/ingênua que a maioria usa, depois a abordagem certa, com o resultado prático de trocar uma pela outra.' },
+  { label: 'Erro comum', hook: 'Aponte um erro comum de e-mail marketing em e-commerce', angle: 'Formato erro comum: nomeie um erro específico e frequente, explique por que ele acontece e por que parece certo à primeira vista, e feche com o jeito certo de fazer.' },
+  { label: 'Checklist', hook: 'Dê um checklist prático de e-mail marketing', angle: 'Formato checklist: escolha um processo (ex: lançamento de campanha, configuração de fluxo) e liste de 4 a 6 itens que precisam ser conferidos, 1 item por slide.' },
+  { label: 'Pergunta e resposta', hook: 'Responda uma pergunta real sobre e-mail marketing', angle: 'Formato pergunta e resposta: escolha uma pergunta comum de quem gerencia e-mail marketing de e-commerce, responda de forma direta e prática, com um exemplo concreto.' },
+  { label: 'Dado/estatística', hook: 'Parta de um número real sobre e-mail marketing', angle: 'Formato dado chocante: abra com uma estatística ou número real e relevante de e-mail marketing/e-commerce, explique o que ele significa na prática e o que fazer a respeito.' },
+  { label: 'Comparação (A vs B)', hook: 'Compare duas táticas de e-mail marketing', angle: 'Formato comparação: escolha duas táticas, ferramentas ou abordagens de e-mail marketing e compare lado a lado, deixando claro quando usar cada uma.' },
+  { label: 'Mini-framework', hook: 'Ensine um mini-framework de e-mail marketing', angle: 'Formato framework: crie ou use um mini-framework nomeável (sigla ou 3-4 princípios) pra alguma prática de e-mail marketing, 1 princípio/letra por slide.' },
+  { label: 'Bastidores/confissão', hook: 'Conte um erro real que você cometeu com e-mail marketing', angle: 'Formato confissão: conte, em primeira pessoa, um erro real que o founder cometeu com e-mail marketing (loja própria, agência ou cliente da Flowbiz), o que ele aprendeu e o que faria diferente hoje.' },
 ];
 
 const jakarta: React.CSSProperties = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
@@ -249,7 +252,7 @@ export default function CMO() {
   const [quickBusy, setQuickBusy] = useState(false);
   const [quickErr, setQuickErr] = useState<string | null>(null);
   const [page, setPage] = useState(0);
-  const [topicBusy, setTopicBusy] = useState<string | null>(null);
+  const [formatBusy, setFormatBusy] = useState<string | null>(null);
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -320,34 +323,35 @@ export default function CMO() {
     }
   }
 
-  // tema fixo (sem pesquisa) → cria a ideia E já gera o carrossel num clique
-  // só, encadeando quick-topic + draft — diferente de createFromLink, que só
-  // cria+pesquisa e deixa o "gerar carrossel" pro usuário clicar depois
-  // dentro do card. Pedido explícito: "gerar pontualmente, sem gerar a
-  // pesquisa" (2026-09-18).
-  async function createFromTopic(pillar: string, topic: { hook: string; angle: string }) {
-    if (topicBusy) return;
-    setTopicBusy(topic.hook);
+  // formato fixo (sem pesquisa, tema livre) → cria a ideia E já gera o
+  // carrossel num clique só, encadeando quick-topic + draft — diferente de
+  // createFromLink, que só cria+pesquisa e deixa o "gerar carrossel" pro
+  // usuário clicar depois dentro do card. Pedido explícito: "gerar
+  // pontualmente, sem gerar a pesquisa" (2026-09-18), card = FORMATO/
+  // estrutura, não tema fixo (correção do usuário na mesma data).
+  async function createFromFormat(pillar: string, format: { label: string; hook: string; angle: string }) {
+    if (formatBusy) return;
+    setFormatBusy(format.label);
     setError(null);
     try {
       const r = await fetch(`${PROXY}/api/hq/content/ideas/quick-topic`, {
         method: 'POST', headers: H,
-        body: JSON.stringify({ profile, pillar, hook: topic.hook, angle: topic.angle }),
+        body: JSON.stringify({ profile, pillar, hook: format.hook, angle: format.angle }),
       });
       const idea = await r.json();
-      if (!r.ok) throw new Error(idea.error || 'Erro ao criar ideia a partir do tema');
+      if (!r.ok) throw new Error(idea.error || 'Erro ao criar ideia a partir do formato');
       const dr = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, {
         method: 'POST', headers: H, body: JSON.stringify({ template: 'reveny' }),
       });
       const draft = await dr.json();
-      if (!dr.ok) throw new Error(draft.error || 'Erro ao gerar carrossel a partir do tema');
+      if (!dr.ok) throw new Error(draft.error || 'Erro ao gerar carrossel a partir do formato');
       setIdeas((prev) => [draft, ...prev]);
       setSelectedId(draft.id);
       setPage(0);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao gerar a partir do tema');
+      setError(e instanceof Error ? e.message : 'Erro ao gerar a partir do formato');
     } finally {
-      setTopicBusy(null);
+      setFormatBusy(null);
     }
   }
 
@@ -508,22 +512,22 @@ export default function CMO() {
               <div style={{ ...sectionLabel, color: '#4a7fa599', marginBottom: '0.85rem' }}>● Dica de e-mail marketing</div>
               <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', marginBottom: '0.75rem' }}>
-                Tema fixo, sem pesquisa — clique gera o carrossel na hora.
+                Formato fixo, tema livre — clique gera o carrossel na hora (a IA escolhe o assunto).
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {EMAIL_TIP_TOPICS.map((t) => (
+                {EMAIL_TIP_FORMATS.map((f) => (
                   <button
-                    key={t.hook}
-                    onClick={() => createFromTopic('dicas-email', t)}
-                    disabled={topicBusy !== null}
+                    key={f.label}
+                    onClick={() => createFromFormat('dicas-email', f)}
+                    disabled={formatBusy !== null}
                     style={{
                       ...jakarta, textAlign: 'left', fontSize: '0.76rem', padding: '0.5rem 0.7rem', borderRadius: 6,
-                      border: '1px solid var(--border-inner)', background: topicBusy === t.hook ? 'var(--bg-inner)' : 'transparent',
-                      color: 'var(--text-sec)', cursor: topicBusy ? 'default' : 'pointer',
-                      opacity: topicBusy && topicBusy !== t.hook ? 0.5 : 1,
+                      border: '1px solid var(--border-inner)', background: formatBusy === f.label ? 'var(--bg-inner)' : 'transparent',
+                      color: 'var(--text-sec)', cursor: formatBusy ? 'default' : 'pointer',
+                      opacity: formatBusy && formatBusy !== f.label ? 0.5 : 1,
                     }}
                   >
-                    {topicBusy === t.hook ? 'Gerando carrossel…' : t.hook}
+                    {formatBusy === f.label ? 'Gerando carrossel…' : f.label}
                   </button>
                 ))}
               </div>
