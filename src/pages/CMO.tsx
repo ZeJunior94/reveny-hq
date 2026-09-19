@@ -253,6 +253,7 @@ export default function CMO() {
   const [quickErr, setQuickErr] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [formatBusy, setFormatBusy] = useState<string | null>(null);
+  const [formatTemplate, setFormatTemplate] = useState<Template>('reveny');
 
   const selected = ideas.find((i) => i.id === selectedId) || null;
   const pillarName = useCallback(
@@ -341,7 +342,7 @@ export default function CMO() {
       const idea = await r.json();
       if (!r.ok) throw new Error(idea.error || 'Erro ao criar ideia a partir do formato');
       const dr = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, {
-        method: 'POST', headers: H, body: JSON.stringify({ template: 'reveny' }),
+        method: 'POST', headers: H, body: JSON.stringify({ template: formatTemplate }),
       });
       const draft = await dr.json();
       if (!dr.ok) throw new Error(draft.error || 'Erro ao gerar carrossel a partir do formato');
@@ -513,6 +514,24 @@ export default function CMO() {
               <div style={{ borderBottom: '1px solid var(--border-inner)', marginBottom: '1rem' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-ter)', marginBottom: '0.75rem' }}>
                 Formato fixo, tema livre — clique gera o carrossel na hora (a IA escolhe o assunto).
+              </div>
+              <div style={{ marginBottom: '0.85rem' }}>
+                <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setFormatTemplate(t)}
+                      title={TEMPLATE_DESC[t]}
+                      disabled={formatBusy !== null}
+                      style={formatTemplate === t
+                        ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '0.45rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
+                        : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.7rem', fontWeight: 700, padding: '0.45rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: formatBusy ? 'default' : 'pointer' }}
+                    >
+                      {TEMPLATE_LABEL[t]}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {EMAIL_TIP_FORMATS.map((f) => (
