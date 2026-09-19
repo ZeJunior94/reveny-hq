@@ -344,8 +344,22 @@ export default function CMO() {
       const dr = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/draft`, {
         method: 'POST', headers: H, body: JSON.stringify({ template: formatTemplate }),
       });
-      const draft = await dr.json();
+      let draft = await dr.json();
       if (!dr.ok) throw new Error(draft.error || 'Erro ao gerar carrossel a partir do formato');
+      // capa (foto no hook) — /cover não exige mais `research` (usa hook/
+      // angle da ideia como fallback), então esse fluxo sem pesquisa também
+      // pode ganhar foto igual reveny/cinema/quote de qualquer outro lugar.
+      // Some ao fluxo de 1 clique em vez de exigir um 2º clique manual
+      // depois — bate com "gerar pontualmente" (2026-09-18). Se a capa
+      // falhar, mantém o carrossel sem foto em vez de jogar tudo fora — já
+      // saiu pronto e utilizável, só sem a imagem.
+      if (formatTemplate === 'reveny' || formatTemplate === 'cinema' || formatTemplate === 'quote') {
+        try {
+          const cr = await fetch(`${PROXY}/api/hq/content/ideas/${idea.id}/cover`, { method: 'POST', headers: H });
+          const cover = await cr.json();
+          if (cr.ok) draft = cover;
+        } catch { /* segue com o carrossel sem foto */ }
+      }
       setIdeas((prev) => [draft, ...prev]);
       setSelectedId(draft.id);
       setPage(0);
@@ -546,7 +560,7 @@ export default function CMO() {
                       opacity: formatBusy && formatBusy !== f.label ? 0.5 : 1,
                     }}
                   >
-                    {formatBusy === f.label ? 'Gerando carrossel…' : f.label}
+                    {formatBusy === f.label ? 'Gerando carrossel (pode levar ~2min)…' : f.label}
                   </button>
                 ))}
               </div>
@@ -1238,27 +1252,20 @@ function IdeaDetail({
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
             {(template === 'reveny' || template === 'cinema' || template === 'quote') && (
-              research ? (
-                <button
-                  onClick={generateCover}
-                  disabled={busy !== null}
-                  style={{ ...btnSecondary(busy !== null), flex: 1 }}
-                >
-                  {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa'}
-                </button>
-              ) : (
-                // ideia gerada antes do research.skill existir (sem `research`) — sem
-                // isso o botão de capa fica preso pra sempre, já que a etapa de
-                // pesquisa só aparecia antes do carrossel existir.
-                <button
-                  onClick={generateResearch}
-                  disabled={busy !== null}
-                  title="Essa ideia foi gerada antes da etapa de pesquisa existir — gere a pesquisa pra poder criar a imagem de capa"
-                  style={{ ...btnSecondary(busy !== null), flex: 1 }}
-                >
-                  {busy === 'research' ? 'Pesquisando (~15s)…' : 'Pesquisar (pra habilitar a capa)'}
-                </button>
-              )
+              // /cover não exige mais `research` — usa hook/angle da própria
+              // ideia como fallback (toda ideia sempre tem os dois, desde a
+              // criação). Antes disso, ideia sem research (ex: pilar
+              // "dicas-email"/quick-topic, de propósito sem pesquisa) ficava
+              // travada atrás de um botão "Pesquisar" que nem fazia sentido
+              // pra esse fluxo — usuário testou e viu quote-card sem foto
+              // (2026-09-18).
+              <button
+                onClick={generateCover}
+                disabled={busy !== null}
+                style={{ ...btnSecondary(busy !== null), flex: 1 }}
+              >
+                {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa'}
+              </button>
             )}
             <button
               onClick={generateDraft}
