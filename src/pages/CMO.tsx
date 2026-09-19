@@ -732,6 +732,33 @@ function IdeaDetail({
 
   const imgs = idea.image_paths || [];
 
+  // baixa 1 slide como blob antes de disparar o <a download> — a imagem vive
+  // no Supabase Storage (origem diferente de hq.reveny.com.br), e o atributo
+  // `download` do HTML só é respeitado pelo navegador pra URL de MESMA
+  // origem; num <a href={urlCrossOrigin} download> o navegador ignora o
+  // download e só ABRE a imagem — era exatamente o "erro" que o usuário via
+  // ao clicar em "baixar" (2026-09-18). Mesma técnica que exportZip já usa
+  // pro .zip (blob: é sempre same-origin, o download funciona).
+  async function downloadSlide(idx: number) {
+    const u = imgs[idx];
+    if (!u) return;
+    setErr(null);
+    try {
+      const versioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
+      const r = await fetch(versioned);
+      if (!r.ok) throw new Error('Falha ao baixar slide');
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `slide-${idx + 1}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Erro ao baixar slide');
+    }
+  }
+
   async function exportZip() {
     if (!imgs.length) return;
     setBusy('export'); setErr(null);
@@ -1001,7 +1028,12 @@ function IdeaDetail({
                   {cur && (
                     <>
                       {' · '}
-                      <a href={cur} download={`slide-${idx + 1}.png`} style={{ color: '#4a7fa5' }}>baixar</a>
+                      <button
+                        onClick={() => downloadSlide(idx)}
+                        style={{ color: '#4a7fa5', background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', textDecoration: 'underline' }}
+                      >
+                        baixar
+                      </button>
                     </>
                   )}
                 </div>
