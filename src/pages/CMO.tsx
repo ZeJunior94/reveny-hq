@@ -654,8 +654,9 @@ function IdeaDetail({
       // recebia um carrossel "incompleto" e precisava lembrar de voltar e
       // clicar num segundo botão pra ganhar a imagem de fundo do slide 1.
       // Só ideias com pesquisa suportam capa (o endpoint exige research), e
-      // só o template "reveny" desenha foto no slide 1 (quote/loud ignoram).
-      if (research && (template === 'reveny' || template === 'cinema')) {
+      // só reveny/cinema/quote desenham foto no slide 1 ("loud" é 100%
+      // tipográfico e ignora image_buf de propósito).
+      if (research && (template === 'reveny' || template === 'cinema' || template === 'quote')) {
         setBusy('cover');
         await generateCoverImage();
       }
@@ -1103,7 +1104,7 @@ function IdeaDetail({
             {busy === 'render' ? 'Renderizando…' : dirty ? 'Salvar e re-renderizar' : 'Re-renderizar'}
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
-            {(template === 'reveny' || template === 'cinema') && (
+            {(template === 'reveny' || template === 'cinema' || template === 'quote') && (
               research ? (
                 <button
                   onClick={generateCover}
