@@ -1283,7 +1283,7 @@ function IdeaDetail({
                 disabled={busy !== null}
                 style={{ ...btnSecondary(busy !== null), flex: 1 }}
               >
-                {busy === 'cover' ? 'Gerando imagem (~1min)…' : 'Gerar imagem de capa'}
+                {busy === 'cover' ? 'Gerando imagens (~1-2min)…' : 'Gerar imagens'}
               </button>
             )}
             <button
