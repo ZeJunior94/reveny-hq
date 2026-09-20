@@ -1179,17 +1179,15 @@ function IdeaDetail({
                       placeholder={template === 'cinema' && (slides[idx].kind || (idx === 0 ? 'hook' : '')) === 'hook'
                         ? 'Título do slide — use **palavra** pra destacar em cor'
                         : 'Título do slide'}
-                      style={{ ...inputStyle, fontWeight: 600, marginBottom: slides[idx].kind !== 'hook' ? '0.35rem' : 0 }}
+                      style={{ ...inputStyle, fontWeight: 600, marginBottom: '0.35rem' }}
                     />
-                    {slides[idx].kind !== 'hook' && (
-                      <textarea
-                        value={slides[idx].body}
-                        onChange={(e) => editSlide(idx, { body: e.target.value })}
-                        placeholder="Texto do slide"
-                        rows={2}
-                        style={inputStyle}
-                      />
-                    )}
+                    <textarea
+                      value={slides[idx].body}
+                      onChange={(e) => editSlide(idx, { body: e.target.value })}
+                      placeholder={slides[idx].kind === 'hook' ? 'Subtítulo (aparece abaixo do título, antes da foto)' : 'Texto do slide'}
+                      rows={2}
+                      style={inputStyle}
+                    />
                   </div>
                 )}
 
