@@ -32,6 +32,52 @@ const TEMPLATE_DESC: Record<Template, string> = {
   loud: 'Headline gigante condensada, tons de azul/navy variando',
   cinema: 'Capa com foto + headline com 1-2 palavras em destaque colorido; resto do carrossel igual ao Reveny',
 };
+// thumbnails estáticos (public/template-previews/*.png, renderizados 1x com
+// dado de exemplo) — antes o seletor era só 4 botões de texto, sem mostrar
+// como cada estilo fica de verdade. Inspirado na galeria visual de template
+// da CarrosseIA (concorrente) que o usuário pediu pra analisar (2026-09-20).
+const TEMPLATE_PREVIEW: Record<Template, string> = {
+  reveny: '/template-previews/reveny.png',
+  quote: '/template-previews/quote.png',
+  loud: '/template-previews/loud.png',
+  cinema: '/template-previews/cinema.png',
+};
+
+// substitui os 3 pontos que antes repetiam o mesmo bloco de 4 botões de
+// texto (parent CMO + 2 estados de IdeaDetail) — `compact` esconde a
+// descrição e usa grid 2×2 pros espaços mais estreitos (coluna esquerda).
+function TemplatePicker({ value, onChange, disabled, compact }: {
+  value: Template; onChange: (t: Template) => void; disabled?: boolean; compact?: boolean;
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: compact ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 6 }}>
+      {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
+        <button
+          key={t}
+          onClick={() => onChange(t)}
+          disabled={disabled}
+          title={TEMPLATE_DESC[t]}
+          style={{
+            textAlign: 'left', padding: 0, borderRadius: 8, overflow: 'hidden',
+            cursor: disabled ? 'default' : 'pointer', background: 'var(--bg-inner)',
+            border: value === t ? '2px solid #4a7fa5' : '1px solid var(--border-inner)',
+            opacity: disabled && value !== t ? 0.6 : 1,
+          }}
+        >
+          <img src={TEMPLATE_PREVIEW[t]} alt="" style={{ width: '100%', aspectRatio: '4 / 5', objectFit: 'cover', display: 'block' }} />
+          <div style={{ padding: compact ? '0.3rem 0.4rem' : '0.4rem 0.5rem' }}>
+            <div style={{ ...jakarta, fontSize: '0.66rem', fontWeight: 700, color: value === t ? '#4a7fa5' : 'var(--text-sec)' }}>
+              {TEMPLATE_LABEL[t]}
+            </div>
+            {!compact && (
+              <div style={{ fontSize: '0.58rem', color: 'var(--text-ter)', marginTop: 2, lineHeight: 1.3 }}>{TEMPLATE_DESC[t]}</div>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
 interface StrategyProfile {
   handle: string; voice: string; displayName?: string; avatarUrl?: string;
   pillars: { key: string; name: string; desc: string }[];
@@ -531,21 +577,7 @@ export default function CMO() {
               </div>
               <div style={{ marginBottom: '0.85rem' }}>
                 <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setFormatTemplate(t)}
-                      title={TEMPLATE_DESC[t]}
-                      disabled={formatBusy !== null}
-                      style={formatTemplate === t
-                        ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.7rem', fontWeight: 700, padding: '0.45rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
-                        : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.7rem', fontWeight: 700, padding: '0.45rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: formatBusy ? 'default' : 'pointer' }}
-                    >
-                      {TEMPLATE_LABEL[t]}
-                    </button>
-                  ))}
-                </div>
+                <TemplatePicker value={formatTemplate} onChange={setFormatTemplate} disabled={formatBusy !== null} compact />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {EMAIL_TIP_FORMATS.map((f) => (
@@ -1043,20 +1075,7 @@ function IdeaDetail({
             </div>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setTemplate(t)}
-                    title={TEMPLATE_DESC[t]}
-                    style={template === t
-                      ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
-                      : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer' }}
-                  >
-                    {TEMPLATE_LABEL[t]}
-                  </button>
-                ))}
-              </div>
+              <TemplatePicker value={template} onChange={setTemplate} disabled={busy !== null} />
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button
@@ -1083,20 +1102,7 @@ function IdeaDetail({
               precisa "Salvar e re-renderizar" (dirty já considera o template). */}
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: '0.62rem', color: 'var(--text-dim)', marginBottom: '0.4rem' }}>Estilo do carrossel</div>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {(['reveny', 'quote', 'loud', 'cinema'] as Template[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTemplate(t)}
-                  title={TEMPLATE_DESC[t]}
-                  style={template === t
-                    ? { ...jakarta, flex: 1, background: '#4a7fa5', color: 'white', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: 'none', cursor: 'pointer' }
-                    : { ...jakarta, flex: 1, background: 'transparent', color: 'var(--text-ter)', fontSize: '0.72rem', fontWeight: 700, padding: '0.5rem', borderRadius: 6, border: '1px solid var(--border-inner)', cursor: 'pointer' }}
-                >
-                  {TEMPLATE_LABEL[t]}
-                </button>
-              ))}
-            </div>
+            <TemplatePicker value={template} onChange={setTemplate} disabled={busy !== null} />
           </div>
 
           {/* preview dos slides renderizados — cache-bust pelo updated_at: o
@@ -1191,17 +1197,32 @@ function IdeaDetail({
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8 }}>
+                {/* filmstrip maior (92×115, era 60×75) com o slide atual em
+                    destaque total e os outros esmaecidos — dá visão do
+                    carrossel inteiro de relance, inspirado no editor da
+                    CarrosseIA (concorrente analisado a pedido do usuário,
+                    2026-09-20), que mostra todos os slides lado a lado com o
+                    selecionado destacado em vez de miniaturas pequenas
+                    genéricas. Continua controlando o mesmo `previewIdx` do
+                    preview grande acima, só a apresentação mudou. */}
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8 }}>
                   {imgs.map((u, i) => {
                     const thumbVersioned = idea.updated_at ? `${u}?v=${encodeURIComponent(idea.updated_at)}` : u;
+                    const isCurrent = i === idx;
                     return (
                       <button
                         key={u + (idea.updated_at || '')}
                         onClick={() => setPreviewIdx(i)}
                         title={`Ver slide ${i + 1}`}
-                        style={{ flexShrink: 0, padding: 0, background: 'none', borderRadius: 6, cursor: 'pointer', border: i === idx ? '2px solid #4a7fa5' : '1px solid var(--border-inner)' }}
+                        style={{
+                          flexShrink: 0, padding: 0, background: 'none', borderRadius: 8, cursor: 'pointer',
+                          border: isCurrent ? '2px solid #4a7fa5' : '1px solid var(--border-inner)',
+                          opacity: isCurrent ? 1 : 0.55,
+                          transition: 'opacity 0.15s, transform 0.15s',
+                          transform: isCurrent ? 'scale(1)' : 'scale(0.96)',
+                        }}
                       >
-                        <img src={thumbVersioned} alt={`slide ${i + 1}`} style={{ width: 60, height: 75, objectFit: 'cover', borderRadius: 5, display: 'block' }} />
+                        <img src={thumbVersioned} alt={`slide ${i + 1}`} style={{ width: 92, height: 115, objectFit: 'cover', borderRadius: 6, display: 'block' }} />
                       </button>
                     );
                   })}
